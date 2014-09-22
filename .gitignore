@@ -1,0 +1,41 @@
+# Object files
+#*.o
+*.ko
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Sublime Text stuff
+*.sublime-workspace
+
+# Vagrant Stuff
+.vagrant
+
+# Project specifics
+## minikernel
+kernel
+kernel.o
+## userspace
+excep_arit
+excep_arit.o
+excep_mem
+excep_mem.o
+init
+init.o
+serv.o
+simplon
+simplon.o
+dormilon
+dormilon.o
