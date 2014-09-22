@@ -2,20 +2,18 @@ CC     = gcc
 CFLAGS = -Wall -Werror -g
 LFLAGS = -lm
 
-EXEMPLES_C = $(wildcard exemple-*.c)
-EXEMPLES_O = $(patsubst %.c,%.o,$(EXEMPLES_C))
-EXEMPLES   = $(patsubst %.c,%,$(EXEMPLES_C))
+SOURCE_C = $(wildcard *.c)
+SOURCE_O = $(patsubst %.c,%.o,$(SOURCE_C))
+SOURCE   = $(patsubst %.c,%.exe,$(SOURCE_C))
 
-$(EXEMPLES): $(EXEMPLES_O)
-	$(CC) $@.o -o $@ $(LFLAGS)
+$(SOURCE): $(SOURCE_O)
+	$(CC) $@.o -o $@.exe $(LFLAGS)
 
-$(EXEMPLES_O): $(EXEMPLES_C)
+$(SOURCE_O): $(SOURCE_C)
 	$(CC) $(CFLAGS) -c $^
 
-exemples: $(EXEMPLES)
-
-all:
+all: $(SOURCE)
 
 clean:
-	rm -f $(EXEMPLES_O)
-	rm -f $(EXEMPLES) 
+	rm -f $(SOURCE_O)
+	rm -f $(SOURCE) 
