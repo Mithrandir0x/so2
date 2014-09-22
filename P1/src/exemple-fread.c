@@ -28,4 +28,6 @@ int main(void)
   printf("%s", str);
   
   free(str);
+
+  return 0;
 }
