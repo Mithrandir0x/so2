@@ -18,7 +18,7 @@ typedef void (*F_PTR)(char*);
 //  [    \    ]    ^    _    `
 // 0x5B 0x5C 0x5D 0x5E 0x5F 0x60
 
-#define IS_WRD_CONCATENATOR(x) x == 0x27 || x == 0x2D
+#define IS_WRD_CONCATENATOR(x) x == 0x27
 
 void print_word(char* str);
 void clear_buffer(char *b);
@@ -46,6 +46,8 @@ int read_text_file(FILE *stream, F_PTR f)
   char str[BUFFER_LENGTH];
   char wrd[BUFFER_LENGTH];
 
+  int flag_invalid_word = 0;
+
   // i: index of the char index from "str"
   // j: index of the NEXT char to add in "wrd"
   int i = 0, j = 0;
@@ -55,24 +57,23 @@ int read_text_file(FILE *stream, F_PTR f)
     i = 0;
     while ( str[i] != 0 )
     {
-      if ( isalpha(str[i]) || isdigit(str[i]) || IS_WRD_CONCATENATOR(str[i]) ) {
-        wrd[j] = str[i];
+      if ( !flag_invalid_word && ( isalpha(str[i]) || IS_WRD_CONCATENATOR(str[i]) ) ) {
+        wrd[j] = tolower(str[i]);
         j++;
-      } else
+      }
       
-      if ( ispunct(str[i]) ) {
+      else if ( ispunct(str[i]) || isspace(str[i]) ) {
         if ( j > 0 ) f(wrd);
         clear_buffer(wrd);
         j = 0;
-      } else if ( isspace(str[i]) ) {
-        if ( j > 0 ) f(wrd);
-        clear_buffer(wrd);
-        j = 0;
+        flag_invalid_word = 0;
       }
 
       else {
-        wrd[j] = str[i];
-        j++;
+        // Not recognised symbol
+        clear_buffer(wrd);
+        j = 0;
+        flag_invalid_word = 1;
       }
 
       i++;
