@@ -1,19 +1,17 @@
 CC     = gcc
-CFLAGS = -Wall -Werror -g
+CSTD   = -std=gnu99
+CFLAGS = -Wall -Werror -g -pedantic $(CSTD)
 LFLAGS = -lm
 
-SOURCE_C = $(wildcard *.c)
-SOURCE_O = $(patsubst %.c,%.o,$(SOURCE_C))
-SOURCE   = $(patsubst %.c,%.exe,$(SOURCE_C))
+SOURCES    = $(wildcard *.c)
+OBJECTS    = $(patsubst %.c,%.o,$(SOURCES))
+EXE        = $(patsubst %.c,%,$(SOURCES))
 
-$(SOURCE): $(SOURCE_O)
-	$(CC) $@.o -o $@.exe $(LFLAGS)
+all: $(EXE)
 
-$(SOURCE_O): $(SOURCE_C)
-	$(CC) $(CFLAGS) -c $^
-
-all: $(SOURCE)
+$(EXE): $(OBJECTS)
+	$(CC) -o $@ $@.o $(LFLAGS)
 
 clean:
-	rm -f $(SOURCE_O)
-	rm -f $(SOURCE) 
+	rm -f $(OBJECTS)
+	rm -f $(EXE) 
