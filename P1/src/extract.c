@@ -63,15 +63,21 @@ int read_text_file(FILE *stream, F_PTR f)
       }
       
       else if ( ispunct(str[i]) || isspace(str[i]) ) {
-        if ( j > 0 ) f(wrd);
-        clear_buffer(wrd);
+        if ( j > 0 )
+        {
+          // Per evitar tenir que esborrar el buffer de paraula,
+          // marquem el byte llegit com a NUL.
+          if ( j < BUFFER_LENGTH ) wrd[j] = 0;
+          f(wrd);
+        }
+        //clear_buffer(wrd);
         j = 0;
         flag_invalid_word = 0;
       }
 
       else {
         // Not recognised symbol
-        clear_buffer(wrd);
+        //clear_buffer(wrd);
         j = 0;
         flag_invalid_word = 1;
       }
@@ -83,7 +89,8 @@ int read_text_file(FILE *stream, F_PTR f)
   return 0;
 }
 
-void clear_buffer(char *b) {
+void clear_buffer(char *b)
+{
   int i;
   for ( i = 0 ; i < BUFFER_LENGTH ; i++ )
     b[i] = 0;
