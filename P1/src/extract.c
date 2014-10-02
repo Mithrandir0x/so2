@@ -21,8 +21,9 @@ typedef void (*F_PTR)(char*);
 #define IS_WRD_CONCATENATOR(x) x == 0x27
 
 void print_word(char* str);
-void clear_buffer(char *b);
-int read_text_file(FILE *stream, F_PTR f);
+int read_text_file(FILE *stream, F_PTR f, F_PTR g);
+void print_valid_word(char* str);
+void print_invalid_word(char* str);
 
 int main()
 {
@@ -34,14 +35,14 @@ int main()
     exit(1);
   }
 
-  read_text_file(fp, &print_word);
+  read_text_file(fp, &print_valid_word, &print_invalid_word);
 
   fclose(fp);
 
   return 0;
 }
 
-int read_text_file(FILE *stream, F_PTR f)
+int read_text_file(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_callback)
 {
   char str[BUFFER_LENGTH];
   char wrd[BUFFER_LENGTH];
@@ -65,20 +66,29 @@ int read_text_file(FILE *stream, F_PTR f)
       else if ( ispunct(str[i]) || isspace(str[i]) ) {
         if ( j > 0 )
         {
-          // Per evitar tenir que esborrar el buffer de paraula,
-          // marquem el byte llegit com a NUL.
-          if ( j < BUFFER_LENGTH ) wrd[j] = 0;
-          f(wrd);
+          if ( flag_invalid_word )
+          {
+            // Per evitar tenir que esborrar el buffer de paraula,
+            // marquem el byte llegit com a NUL.
+            if ( j < BUFFER_LENGTH ) wrd[j] = 0;
+            invalid_word_callback(wrd);
+          }
+          else
+          {
+            // Per evitar tenir que esborrar el buffer de paraula,
+            // marquem el byte llegit com a NUL.
+            if ( j < BUFFER_LENGTH ) wrd[j] = 0;
+            valid_word_callback(wrd);
+          }
         }
-        //clear_buffer(wrd);
         j = 0;
         flag_invalid_word = 0;
       }
 
       else {
         // Not recognised symbol
-        //clear_buffer(wrd);
-        j = 0;
+        wrd[j] = tolower(str[i]);
+        j++;
         flag_invalid_word = 1;
       }
 
@@ -89,14 +99,12 @@ int read_text_file(FILE *stream, F_PTR f)
   return 0;
 }
 
-void clear_buffer(char *b)
+void print_valid_word(char* str)
 {
-  int i;
-  for ( i = 0 ; i < BUFFER_LENGTH ; i++ )
-    b[i] = 0;
+  printf("  Paraula vàlida: %s\n", str);
 }
 
-void print_word(char* str)
+void print_invalid_word(char* str)
 {
-  printf("%s\n", str);
+  printf("Paraula invàlida: %s\n", str);
 }
