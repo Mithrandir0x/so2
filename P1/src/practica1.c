@@ -18,32 +18,53 @@ typedef void (*F_PTR)(char*);
 //  [    \    ]    ^    _    `
 // 0x5B 0x5C 0x5D 0x5E 0x5F 0x60
 
+
 #define IS_WRD_CONCATENATOR(x) x == 0x27
 
-int read_text_file(FILE *stream, F_PTR f, F_PTR g);
+int get_words(FILE *stream, F_PTR f, F_PTR g);
 void print_valid_word(char* str);
 void print_invalid_word(char* str);
 
-int main()
+/**
+ * Program to extract words from a file passed by argument.
+ *
+ */
+int main(int argc, char *argv[])
 {
+  if ( argc != 2 )
+  {
+    printf("usage: practica1 fitxer.txt.\n");
+    exit(1);
+  }
+
   FILE *fp;
 
-  fp = fopen("fitxer.txt", "r");
-  if (!fp) {
+  fp = fopen(argv[1], "r");
+  if (!fp)
+  {
     printf("No he pogut obrir fitxer.\n");
     exit(1);
   }
 
-  read_text_file(fp, &print_valid_word, &print_invalid_word);
+  get_words(fp, &print_valid_word, &print_invalid_word);
 
   fclose(fp);
 
   return 0;
 }
 
-int read_text_file(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_callback)
+/**
+ * This function parses a file, trying to find, for each line, any valid words available.
+ *
+ * @param stream                A FILE stream structure to the file to be parsed.
+ * @param valid_word_callback   A function pointer where valid words will be passed, when found.
+ * @param invalid_word_callback A function pointer where invalid words will be passed, when found.
+ */
+int get_words(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_callback)
 {
+  // This array stores a line of text from the file being read
   char str[BUFFER_LENGTH];
+  // This array stores the word to be passed as valid or invalid
   char wrd[BUFFER_LENGTH];
 
   int flag_invalid_word = 0;
@@ -58,6 +79,7 @@ int read_text_file(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_c
     while ( str[i] != 0 )
     {
       if ( !flag_invalid_word && ( isalpha(str[i]) || IS_WRD_CONCATENATOR(str[i]) ) ) {
+        // Save any valid character in the word buffer
         wrd[j] = tolower(str[i]);
         j++;
       }
@@ -67,25 +89,29 @@ int read_text_file(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_c
         {
           if ( flag_invalid_word )
           {
-            // Per evitar tenir que esborrar el buffer de paraula,
-            // marquem el byte llegit com a NUL.
+            // To avoid having to erase all the word buffer, 
+            // simply mark the last byte read as \0.
             if ( j < BUFFER_LENGTH ) wrd[j] = 0;
             invalid_word_callback(wrd);
           }
           else
           {
-            // Per evitar tenir que esborrar el buffer de paraula,
-            // marquem el byte llegit com a NUL.
+            // To avoid having to erase all the word buffer, 
+            // simply mark the last byte read as \0.
             if ( j < BUFFER_LENGTH ) wrd[j] = 0;
             valid_word_callback(wrd);
           }
         }
+        
+        // Reset the word counter, and the invalid word flag.
         j = 0;
         flag_invalid_word = 0;
       }
 
       else {
-        // Not recognised symbol
+        // Not recognised symbol.
+        // Flag the word as invalid,
+        // but still, save the character
         wrd[j] = tolower(str[i]);
         j++;
         flag_invalid_word = 1;
@@ -98,11 +124,21 @@ int read_text_file(FILE *stream, F_PTR valid_word_callback, F_PTR invalid_word_c
   return 0;
 }
 
+/**
+ * This function is used to print valid words.
+ *
+ * @param str The word stored in a char array
+ */
 void print_valid_word(char* str)
 {
   printf("  Paraula vàlida: %s\n", str);
 }
 
+/**
+ * This function is used to print invalid words.
+ *
+ * @param str The word stored in a char array
+ */
 void print_invalid_word(char* str)
 {
   printf("Paraula invàlida: %s\n", str);

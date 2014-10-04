@@ -6,7 +6,7 @@ int main(void)
   int c;
   FILE *fp;
 
-  fp = fopen("../proves/fgetc-00", "r");
+  fp = fopen("./fgetc-00.txt", "r");
   if (!fp) {
     printf("No he pogut obrir fitxer.\n");
     exit(1);
