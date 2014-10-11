@@ -23,4 +23,7 @@
 # Vagrant Stuff
 .vagrant
 
+# Cloud9 stuff
+.c9
+
 # Project specifics
