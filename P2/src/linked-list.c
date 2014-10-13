@@ -33,17 +33,6 @@ static void freeListData(ListData *data)
 
 /**
  *
- * Dumps data contents to stdout. To be used for debugging.
- *
- */
-
-static void dumpListData(ListData *data)
-{
-  printf("Key [%s] appears %d times\n", data->primary_key, data->numTimes);
-}
-
-/**
- *
  * Compares if primary_key1 is equal to primary_key2. Should return 1 (true) if condition
  * is satisfied, 0 (false) otherwise.
  *
@@ -178,6 +167,17 @@ void deleteList(List *l)
 }
 
 /**
+ *
+ * Dumps data contents to stdout. To be used for debugging.
+ *
+ */
+
+static void dumpListData(ListData *data)
+{
+  printf("      [%s] = %d\n", data->primary_key, data->numTimes);
+}
+
+/**
  * 
  * Dumps the contents of the list. Internally this function
  * called dumpListData which is user defined.
@@ -198,4 +198,3 @@ void dumpList(List *l)
 
   //printf("Total number of items: %d\n", l->numItems);
 }
-

@@ -31,6 +31,9 @@ TESTS_EXE        = $(patsubst $(SRC_TEST)/%.c, $(SRC)/%, $(TESTS_SOURCES))
 DATA_STRUCTS_SOURCES = $(SRC)/linked-list.c $(SRC)/red-black-tree.c $(SRC)/hash-list.c
 DATA_STRUCTS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(DATA_STRUCTS_SOURCES))
 
+FT_HELPERS_SOURCES = $(SRC)/word-utils.c
+FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
+
 all: dist tar
 
 test_unit_tests:
@@ -41,8 +44,8 @@ test_unit_tests:
 unit_tests: clean $(TESTS_EXE)
 	valgrind ./test-hash-lists $(VALGRIND_FLAGS)
 
-$(TESTS_EXE): $(TESTS_OBJECTS) $(DATA_STRUCTS_OBJECTS)
-	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(LFLAGS)
+$(TESTS_EXE): $(TESTS_OBJECTS) $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
+	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
 # exemples: $(EXEMPLES_EXE)
 
