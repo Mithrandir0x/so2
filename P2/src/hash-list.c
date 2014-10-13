@@ -31,15 +31,15 @@ void hl_initialize(HashList *hl, int bucket_size)
   }
 }
 
-void hl_add_word(HashList *hl, char *str, int str_len)
+int hl_add_word(HashList *hl, char *str, int str_len)
 {
-  int h;
+  int h, r;
   List *l;
   ListData *ld;
   
   h = hash(str, str_len, hl->size);
 
-  printf("[%16s] Calculated hash for [%s]: [%d]\n", "hl_add_word", str, h);
+  // printf("[%16s] Calculated hash for [%s]: [%d]\n", "hl_add_word", str, h);
   
   l = &(hl->buckets[h]);
   
@@ -47,6 +47,7 @@ void hl_add_word(HashList *hl, char *str, int str_len)
   if ( ld != NULL )
   {
     ld->numTimes++;
+    r = 1;
   }
   else
   {
@@ -55,7 +56,11 @@ void hl_add_word(HashList *hl, char *str, int str_len)
     ld->numTimes = 1;
     
     insertList(l, ld);
+
+    r = 0;
   }
+
+  return r;
 }
 
 void hl_clear(HashList *hl)

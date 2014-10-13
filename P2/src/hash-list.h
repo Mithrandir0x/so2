@@ -12,7 +12,8 @@ typedef struct hash_list_t {
 } HashList;
 
 void hl_initialize(HashList *hashlist, int bucket_size);
-void hl_add_word(HashList *hl, char *str, int str_len);
+int hl_add_word(HashList *hl, char *str, int str_len);
+void hl_clear(HashList *hl);
 void hl_free(HashList *hl);
 void hl_print(HashList *hl);
 

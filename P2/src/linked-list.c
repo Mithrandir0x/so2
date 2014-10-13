@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * We include the linked-list.h header. Note the double
@@ -28,6 +29,7 @@
 
 static void freeListData(ListData *data)
 {
+  free(data->primary_key);
   free(data); 
 }
 
@@ -40,7 +42,8 @@ static void freeListData(ListData *data)
 
 static int compEQ(TYPE_LIST_PRIMARY_KEY primary_key1, TYPE_LIST_PRIMARY_KEY primary_key2)
 {
-  int rc = (primary_key1 == primary_key2);
+  int rc;
+  rc = strcmp(primary_key1, primary_key2) == 0 ? 1 : 0;
   return rc;
 }
 

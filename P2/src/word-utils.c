@@ -1,6 +1,7 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 
 #include "word-utils.h"
 
@@ -22,6 +23,7 @@ int wu_get_words(FILE *stream, FunctionWordSizePtr valid_word_callback, Function
 {
   char str[WU_BUFFER_LENGTH];
   char wrd[WU_BUFFER_LENGTH];
+  char *copybuffer;
 
   int flag_invalid_word = 0;
 
@@ -47,14 +49,19 @@ int wu_get_words(FILE *stream, FunctionWordSizePtr valid_word_callback, Function
             // Per evitar tenir que esborrar el buffer de paraula,
             // marquem el byte llegit com a NUL.
             if ( j < WU_BUFFER_LENGTH ) wrd[j] = 0;
-            invalid_word_callback(wrd, j);
+            
+            if ( invalid_word_callback != NULL ) invalid_word_callback(wrd, j);
           }
           else
           {
             // Per evitar tenir que esborrar el buffer de paraula,
             // marquem el byte llegit com a NUL.
             if ( j < WU_BUFFER_LENGTH ) wrd[j] = 0;
-            valid_word_callback(wrd, j);
+            
+            copybuffer = malloc(j * sizeof(char) + ( 1 * sizeof(char) ));
+            strcpy(copybuffer, wrd);
+            
+            valid_word_callback(copybuffer, j);
           }
         }
         j = 0;
