@@ -19,7 +19,7 @@
  *
  */
 
-#define TYPE_LIST_PRIMARY_KEY int
+#define TYPE_LIST_PRIMARY_KEY char*
 
 /**
  *

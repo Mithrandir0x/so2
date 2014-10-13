@@ -1,11 +1,12 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "hash-list.h"
 
-int hash(char *str, int str_len, int max)
+static int hash(char *str, int str_len, int max)
 {
-  int i, hash, sum = 0;
-  int seed = HASH_SEED;
+  unsigned int i, hash, sum = 0;
+  unsigned int seed = HASH_SEED;
   
   for(i = 0; i < str_len; i++)
     sum = sum * seed + (int) str[i];
@@ -17,17 +18,16 @@ int hash(char *str, int str_len, int max)
 
 void hl_initialize(HashList *hl, int bucket_size)
 {
-  int i = bucket_size;
+  int i;
   List *l;
   
   hl->size = bucket_size;
   hl->buckets = malloc(sizeof(List) * bucket_size);
-  
-  while ( i > 0 )
+
+  for ( i = 0 ; i < bucket_size ; i++ )
   {
     l = &(hl->buckets[i]);
     initList(l);
-    i--;
   }
 }
 
@@ -38,11 +38,12 @@ void hl_add_word(HashList *hl, char *str, int str_len)
   ListData *ld;
   
   h = hash(str, str_len, hl->size);
+
+  printf("[%16s] Calculated hash for [%s]: [%d]\n", "hl_add_word", str, h);
   
   l = &(hl->buckets[h]);
   
-  // TODO Fix type definition required by linked list
-  //ld = findList(l, str);
+  ld = findList(l, str);
   if ( ld != NULL )
   {
     ld->numTimes++;
@@ -50,29 +51,48 @@ void hl_add_word(HashList *hl, char *str, int str_len)
   else
   {
     ld = malloc(sizeof(ListData));
-    // TODO Fix type definition required by linked list
-    //ld->primary_key = str;
+    ld->primary_key = str;
     ld->numTimes = 1;
     
     insertList(l, ld);
   }
 }
 
+void hl_clear(HashList *hl)
+{
+  int hl_size = hl->size;
+  hl_free(hl);
+  hl_initialize(hl, hl_size);
+}
+
 void hl_free(HashList *hl)
 {
-  int i = hl->size;
+  int i, n;
   List *l;
-  
-  while ( i > 0 )
+
+  for ( i = 0, n = hl->size ; i < n ; i++ )
   {
     l = &(hl->buckets[i]);
-    
     deleteList(l);
-    free(&(hl->buckets[i]));
-    
-    i--;
   }
   
   hl->size = 0;
   free(hl->buckets);
+}
+
+void hl_print(HashList *hl)
+{
+  int i = 0, n = hl->size;
+  List *l;
+
+  printf("[\n");
+  for ( ; i < n ; i++ )
+  {
+    l = &(hl->buckets[i]);
+    
+    printf("  [%3d] List[%d] {\n", i, l->numItems);
+    dumpList(l);
+    printf("  }\n");
+  }
+  printf("]\n");
 }

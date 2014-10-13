@@ -39,7 +39,7 @@ static void freeListData(ListData *data)
 
 static void dumpListData(ListData *data)
 {
-  printf("Key %03d appears %d times\n", data->primary_key, data->numTimes);
+  printf("Key [%s] appears %d times\n", data->primary_key, data->numTimes);
 }
 
 /**
@@ -196,6 +196,6 @@ void dumpList(List *l)
     current = current->next;
   }
 
-  printf("Total number of items: %d\n", l->numItems);
+  //printf("Total number of items: %d\n", l->numItems);
 }
 
