@@ -3,7 +3,7 @@ typedef struct file_list_t
 {
   int size;
   char **file_paths;
-} file_list;
+} FileList;
 
 /**
  * Return a list of files to be read given a configuration file.
@@ -15,7 +15,7 @@ typedef struct file_list_t
  * 
  * @param config_path The config file to read from
  */
-file_list_t get_file_list(char *config_path)
+FileList cfg_get_file_list(char *config_path)
 {
   
 }
