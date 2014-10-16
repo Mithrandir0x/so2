@@ -1,21 +1,39 @@
+#include <stdio.h>
+#include <stdlib.h>
 
-typedef struct file_list_t
-{
-  int size;
-  char **file_paths;
-} FileList;
+#include "config.h"
 
-/**
- * Return a list of files to be read given a configuration file.
- * 
- * A configuration file should start with the number of files to be
- * read at the first line.
- * 
- * The next lines should be all the paths to the files to be read.
- * 
- * @param config_path The config file to read from
- */
-FileList cfg_get_file_list(char *config_path)
+void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
 {
+  FILE *config;
+  char str[buffer_size];
+  char *r;
+  int total_files = 0;
+  int read = 0;
   
+  
+  config = fopen(config_path, "r");
+  
+  if (config == 0)
+  {
+    printf("El fitxer [%s] no existeix o no es pot obrir.\n", config_path);
+    return;
+  }
+  r = fgets(str, buffer_size, config);
+  
+  if (r == NULL)
+  {  
+    printf("El fitxer [%s] esta buit.\n", config_path);
+    return;
+  }
+  total_files = atoi(str);
+  
+  while ( fgets(str, buffer_size, config) != NULL )
+  {
+   callback(str, read, total_files);
+   read++;
+   
+  }
+  
+  fclose(config);
 }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "config.h"
 #include "hash-list.h"
 #include "red-black-tree.h"
 #include "word-utils.h"
@@ -123,19 +123,31 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
 
 int main()
 {
-    HashList hl;
-    RBTree tree;
-
-    hl_initialize(&hl, 10);
-    initTree(&tree, 1);
-
-    create_local_structure(&hl, "fitxer.txt");
-    update_global_structure(&tree, &hl, 0);
-
-    hl_print(&hl);
+    __block int initializedTree = 0;
+    __block RBTree tree;
+    __block HashList hl;
+    
+    ProgressPtr process_file;
+    
+    process_file = ^(char *filePath, int file_num, int total_files){
+        
+        if ( !initializedTree )
+        {
+            initTree(&tree, total_files);
+            initializedTree = 1;
+        }
+        
+        hl_initialize(&hl, 10);
+        create_local_structure(&hl, filePath);
+        update_global_structure(&tree, &hl, file_num);
+        hl_print(&hl);
+        hl_free(&hl);
+    };
+    
+    cfg_get_file_list("files.cfg", 100, process_file);
+    
     printTree(&tree);
     
-    hl_free(&hl);
     deleteTree(&tree);
 
     return 0;

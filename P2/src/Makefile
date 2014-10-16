@@ -18,7 +18,7 @@ CSTD   = -std=gnu99
 CFLAGS = -Wall -Werror -g -pedantic $(CSTD) -fblocks
 LFLAGS = -lm -lBlocksRuntime
 
-VALGRIND_FLAGS = --leak-check=full --track-origins=yes -v
+VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
 
 EXEMPLES_SOURCES    = $(wildcard $(SRC)/exemple-*.c)
 EXEMPLES_OBJECTS    = $(patsubst $(SRC)/exemple-%.c, $(SRC)/exemple-%.o, $(EXEMPLES_SOURCES))
@@ -32,7 +32,7 @@ DATA_STRUCTS_SOURCES = $(SRC)/linked-list.c $(SRC)/red-black-tree.c $(SRC)/hash-
 DATA_STRUCTS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(DATA_STRUCTS_SOURCES))
 DATA_STRUCTS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(DATA_STRUCTS_SOURCES))
 
-FT_HELPERS_SOURCES = $(SRC)/word-utils.c
+FT_HELPERS_SOURCES = $(SRC)/word-utils.c $(SRC)/config.c
 FT_HELPERS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(FT_HELPERS_SOURCES))
 FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
 
