@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * We include the linked-list.h header. Note the double
@@ -28,18 +29,8 @@
 
 static void freeListData(ListData *data)
 {
+  free(data->primary_key);
   free(data); 
-}
-
-/**
- *
- * Dumps data contents to stdout. To be used for debugging.
- *
- */
-
-static void dumpListData(ListData *data)
-{
-  printf("Key [%s] appears %d times\n", data->primary_key, data->numTimes);
 }
 
 /**
@@ -51,7 +42,8 @@ static void dumpListData(ListData *data)
 
 static int compEQ(TYPE_LIST_PRIMARY_KEY primary_key1, TYPE_LIST_PRIMARY_KEY primary_key2)
 {
-  int rc = (primary_key1 == primary_key2);
+  int rc;
+  rc = strcmp(primary_key1, primary_key2) == 0 ? 1 : 0;
   return rc;
 }
 
@@ -178,6 +170,17 @@ void deleteList(List *l)
 }
 
 /**
+ *
+ * Dumps data contents to stdout. To be used for debugging.
+ *
+ */
+
+static void dumpListData(ListData *data)
+{
+  printf("      [%s] = %d\n", data->primary_key, data->numTimes);
+}
+
+/**
  * 
  * Dumps the contents of the list. Internally this function
  * called dumpListData which is user defined.
@@ -198,4 +201,3 @@ void dumpList(List *l)
 
   //printf("Total number of items: %d\n", l->numItems);
 }
-

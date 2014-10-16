@@ -13,12 +13,12 @@ DIST_TST = $(DIST_PKG)/proves
 
 TAR_OPTS      = zcvf
 
-CC     = gcc
+CC     = clang
 CSTD   = -std=gnu99
-CFLAGS = -Wall -Werror -g -pedantic $(CSTD)
-LFLAGS = -lm
+CFLAGS = -Wall -Werror -g -pedantic $(CSTD) -fblocks
+LFLAGS = -lm -lBlocksRuntime
 
-VALGRIND_FLAGS = --leak-check=full -v
+VALGRIND_FLAGS = --leak-check=full --track-origins=yes -v
 
 EXEMPLES_SOURCES    = $(wildcard $(SRC)/exemple-*.c)
 EXEMPLES_OBJECTS    = $(patsubst $(SRC)/exemple-%.c, $(SRC)/exemple-%.o, $(EXEMPLES_SOURCES))
@@ -29,20 +29,30 @@ TESTS_OBJECTS    = $(patsubst $(SRC_TEST)/%.c, $(SRC_TEST)/%.o, $(TESTS_SOURCES)
 TESTS_EXE        = $(patsubst $(SRC_TEST)/%.c, $(SRC)/%, $(TESTS_SOURCES))
 
 DATA_STRUCTS_SOURCES = $(SRC)/linked-list.c $(SRC)/red-black-tree.c $(SRC)/hash-list.c
+DATA_STRUCTS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(DATA_STRUCTS_SOURCES))
 DATA_STRUCTS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(DATA_STRUCTS_SOURCES))
+
+FT_HELPERS_SOURCES = $(SRC)/word-utils.c
+FT_HELPERS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(FT_HELPERS_SOURCES))
+FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
 
 all: dist tar
 
-test_unit_tests:
-	echo $(TESTS_SOURCES)
-	echo $(TESTS_OBJECTS)
-	echo $(TESTS_EXE)
+exe: practica2
+
+tests: clean practica2
+	valgrind $(VALGRIND_FLAGS) ./practica2
+
+practica2: practica2.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
+	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
 unit_tests: clean $(TESTS_EXE)
-	valgrind ./test-hash-lists $(VALGRIND_FLAGS)
+	# valgrind $(VALGRIND_FLAGS) ./test-blocks
+	# valgrind $(VALGRIND_FLAGS) ./test-hash-lists
+	# valgrind $(VALGRIND_FLAGS) ./test-word-extract
 
-$(TESTS_EXE): $(TESTS_OBJECTS) $(DATA_STRUCTS_OBJECTS)
-	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(LFLAGS)
+$(TESTS_EXE): $(TESTS_OBJECTS) $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
+	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
 # exemples: $(EXEMPLES_EXE)
 
@@ -56,11 +66,17 @@ clean:
 	rm -f $(EXEMPLES_EXE)
 	rm -rf $(SRC_TEST)/*.o
 	rm -f $(TESTS_EXE)
+	rm -rf practica2
 
 tar:
 	cd $(DIST); tar $(TAR_OPTS) $(PKG).tar.gz $(PKG)
 
 dist: clean exe tests
-	echo "Not implemented yet."
-
-
+	mkdir -p $(DIST_SRC)
+	mkdir -p $(DIST_TST)
+	cp $(DATA_STRUCTS_SOURCES)	$(DIST_SRC)/
+	cp $(DATA_STRUCTS_HEADERS)	$(DIST_SRC)/
+	cp $(FT_HELPERS_SOURCES)	$(DIST_SRC)/
+	cp $(FT_HELPERS_HEADERS)	$(DIST_SRC)/
+	cp Makefile					$(DIST_SRC)/
+	cp practica2.c				$(DIST_SRC)/
