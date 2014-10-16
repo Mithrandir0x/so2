@@ -58,6 +58,11 @@ int wu_get_words(FILE *stream, FunctionWordSizePtr valid_word_callback, Function
             // marquem el byte llegit com a NUL.
             if ( j < WU_BUFFER_LENGTH ) wrd[j] = 0;
             
+            // Quan s'ha trobat una paraula vàlida, en comptes de donar el buffer
+            // on es guarda la paraula, fem una còpia de la paraula al HEAP.
+            //
+            // Queda a discreció de la persona que implementa el callback d'alliberar
+            // la memòria reservada en aquest punt.
             copybuffer = malloc(j * sizeof(char) + ( 1 * sizeof(char) ));
             strcpy(copybuffer, wrd);
             

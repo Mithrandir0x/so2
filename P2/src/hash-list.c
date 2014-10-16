@@ -101,3 +101,36 @@ void hl_print(HashList *hl)
   }
   printf("]\n");
 }
+
+HashListIterator* hl_iterator(HashList *hl)
+{
+  HashListIterator *iter;
+
+  iter = malloc(sizeof(HashListIterator));
+
+  iter->index = 0;
+  iter->hashList = hl;
+
+  return iter;
+}
+
+List *hl_next(HashListIterator *iter)
+{
+  int i, size;
+  HashList *hashList;
+  List *list;
+
+  hashList = iter->hashList;
+
+  i = iter->index;
+  size = hashList->size;
+  
+  if ( i < size )
+  {
+    list = &(hashList->buckets[i]);
+    iter->index++;
+    return list;
+  }
+
+  return NULL;
+}

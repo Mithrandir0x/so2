@@ -35,9 +35,8 @@
 
 static void freeRBData(RBData *data)
 {
-  if (data->string)
-    free(data->string);
-
+  free(data->primary_key);
+  free(data->tpf);
   free(data);
 }
 
@@ -50,7 +49,8 @@ static void freeRBData(RBData *data)
 
 static int compLT(TYPE_RBTREE_PRIMARY_KEY primary_key1, TYPE_RBTREE_PRIMARY_KEY primary_key2)
 {
-  int rc = (primary_key1 < primary_key2);
+  int rc;
+  rc = strcmp(primary_key1, primary_key2) < 0 ? 1 : 0;
   return rc;
 }
 
@@ -63,7 +63,8 @@ static int compLT(TYPE_RBTREE_PRIMARY_KEY primary_key1, TYPE_RBTREE_PRIMARY_KEY 
 
 static int compEQ(TYPE_RBTREE_PRIMARY_KEY primary_key1, TYPE_RBTREE_PRIMARY_KEY primary_key2)
 {
-  int rc = (primary_key1 == primary_key2);
+  int rc;
+  rc = strcmp(primary_key1, primary_key2) == 0 ? 1 : 0;
   return rc;
 }
 
@@ -84,9 +85,10 @@ static Node sentinel = { NIL, NIL, 0, BLACK, NULL};
  *
  */
 
-void initTree(RBTree *tree)
+void initTree(RBTree *tree, int num_files)
 {
   tree->root = NIL;
+  tree->num_files = num_files;
 }
 
 /**
@@ -321,4 +323,43 @@ void deleteTree(RBTree *tree)
     deleteTreeRecursive(tree->root);
 }
 
+static void printIntArray(RBData *data)
+{
+  int i, n;
+  int *tpf;
 
+  tpf = data->tpf;
+
+  for ( i = 0, n = data->num_files ; i < n ; i++ )
+  {
+    printf("%d ", tpf[i]);
+  }
+}
+
+static void printNode(Node *current)
+{
+  RBData *data;
+
+  if ( current->left != NIL )
+  {
+    printNode(current->left);
+  }
+
+  data = current->data;
+  printf("  [%s]: { total: [%d], per_file: [ ", data->primary_key, data->total);
+  printIntArray(data);
+  printf("] }\n");
+
+  if ( current->right != NIL )
+  {
+    printNode(current->right);
+  }
+}
+
+/**
+ * Prints the tree in DFS mode.
+ */
+void printTree(RBTree *tree)
+{
+  printNode(tree->root);
+}

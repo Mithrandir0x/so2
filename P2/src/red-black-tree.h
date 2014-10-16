@@ -7,7 +7,7 @@
  *
  */
 
-#define TYPE_RBTREE_PRIMARY_KEY int
+#define TYPE_RBTREE_PRIMARY_KEY char*
 
 /**
  *
@@ -27,8 +27,9 @@ typedef struct RBData_
 
   // This is the additional information that will be stored
   // within the structure.
-  char *string;
-  int num;
+  int *tpf;   // Times Per File. How many times a word has appeared in a file?
+  int total;  // Number of files. How many files does the word appear in?
+  int num_files;
 } RBData;
 
 /**
@@ -59,6 +60,7 @@ typedef struct Node_ {
 
 typedef struct RBTree_ {
   Node *root;                   /* root of Red-Black tree */
+  int num_files;                /* amount of files to be parsed */
 } RBTree;
 
 /*
@@ -66,10 +68,8 @@ typedef struct RBTree_ {
  * red-black-tree.c have been included here.
  */
 
-void initTree(RBTree *tree);
+void initTree(RBTree *tree, int num_files);
 void insertNode(RBTree *tree, RBData *data);
 RBData *findNode(RBTree *tree, TYPE_RBTREE_PRIMARY_KEY primary_key); 
 void deleteTree(RBTree *tree);
-
-
-
+void printTree(RBTree *tree);
