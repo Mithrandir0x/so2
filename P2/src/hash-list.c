@@ -3,6 +3,13 @@
 
 #include "hash-list.h"
 
+/**
+ * Internal string hashing function
+ *
+ * @param str     String to be hashed
+ * @param str_len String size
+ * @param max     Maximum value allowed for the hash value returned
+ */
 static int hash(char *str, int str_len, int max)
 {
   unsigned int i, hash, sum = 0;
@@ -16,6 +23,12 @@ static int hash(char *str, int str_len, int max)
   return hash;
 }
 
+/**
+ * Initialize a HashList structure with a fixed-size capacity.
+ *
+ * @param hl          A HashList pointer to be initialized
+ * @param bucket_size Indicate the capacity of the hash map
+ */
 void hl_initialize(HashList *hl, int bucket_size)
 {
   int i;
@@ -31,6 +44,14 @@ void hl_initialize(HashList *hl, int bucket_size)
   }
 }
 
+/**
+ * Stores a word in the hash-list.
+ *
+ * @param hl      A HashList structure
+ * @param str     The string to be saved
+ * @param str_len Length of the string
+ * @returns Whether the word has been stored, or simply incremented the word counter
+ */
 int hl_add_word(HashList *hl, char *str, int str_len)
 {
   int h, r;
@@ -63,6 +84,11 @@ int hl_add_word(HashList *hl, char *str, int str_len)
   return r;
 }
 
+/**
+ * Empty the hash-list and initialize it again.
+ *
+ * @param hl A hash-list structure
+ */
 void hl_clear(HashList *hl)
 {
   int hl_size = hl->size;
@@ -70,6 +96,11 @@ void hl_clear(HashList *hl)
   hl_initialize(hl, hl_size);
 }
 
+/**
+ * Frees the structure.
+ *
+ * @param hl A hash-list structure
+ */
 void hl_free(HashList *hl)
 {
   int i, n;
@@ -85,6 +116,11 @@ void hl_free(HashList *hl)
   free(hl->buckets);
 }
 
+/**
+ * Prints in terminal a human readable representation of the hash-list.
+ *
+ * @param hl A hash-list structure
+ */
 void hl_print(HashList *hl)
 {
   int i = 0, n = hl->size;
@@ -102,6 +138,28 @@ void hl_print(HashList *hl)
   printf("]\n");
 }
 
+/**
+ * Prints in terminal a gnuplot representation of the hash-list.
+ *
+ * @param hl A hash-list structure
+ */
+void hl_print_stats(HashList *hl)
+{
+  int i = 0, n = hl->size, k = 0;
+  List *l;
+
+  for ( ; i < n ; i++, k = 0 )
+  {
+    l = &(hl->buckets[i]);
+    printf("%d %d %d\n", i, i, l->numItems);
+  }
+}
+
+/**
+ * Creates an iterator ready to loop the hash-list.
+ *
+ * @param hl A hash-list structure
+ */
 HashListIterator* hl_iterator(HashList *hl)
 {
   HashListIterator *iter;
@@ -114,7 +172,12 @@ HashListIterator* hl_iterator(HashList *hl)
   return iter;
 }
 
-List *hl_next(HashListIterator *iter)
+/**
+ * Returns the next list available in the iterator.
+ *
+ * @param iter The iterator to iterate
+ */
+List* hl_next(HashListIterator *iter)
 {
   int i, size;
   HashList *hashList;

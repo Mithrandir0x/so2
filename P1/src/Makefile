@@ -46,6 +46,6 @@ dist: clean exe tests
 	mkdir -p $(DIST_TST)
 	cp fitxer.txt    $(DIST_SRC)/fitxer.txt
 	cp practica1.c   $(DIST_SRC)/practica1.c
-	cp fgetc-00.c   $(DIST_SRC)/fgetc-00.c
+	cp fgetc-00.c    $(DIST_SRC)/fgetc-00.c
 	cp Makefile      $(DIST_SRC)/Makefile
 	cp -r $(TEST)/*  $(DIST_TST)/
