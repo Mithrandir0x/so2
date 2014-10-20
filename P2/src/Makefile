@@ -11,12 +11,17 @@ DIST_PKG = $(DIST)/$(PKG)
 DIST_SRC = $(DIST_PKG)/src
 DIST_TST = $(DIST_PKG)/proves
 
+UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
+
 TAR_OPTS      = zcvf
 
 CC     = clang
 CSTD   = -std=gnu99
 CFLAGS = -Wall -Werror -g -pedantic $(CSTD) -fblocks
 LFLAGS = -lm -lBlocksRuntime
+ifeq ($(UNAME),Darwin)
+LFLAGS = -lm
+endif
 
 VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
 
