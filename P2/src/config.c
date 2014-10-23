@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 
@@ -10,6 +11,7 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
   char *r;
   int total_files = 0;
   int read = 0;
+  size_t ln;
   
   
   config = fopen(config_path, "r");
@@ -30,9 +32,12 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
   
   while ( fgets(str, buffer_size, config) != NULL )
   {
-   callback(str, read, total_files);
-   read++;
-   
+    // Do not include newline character when returning the string with the file path
+    ln = strlen(str) - 1;
+    if ( str[ln] == '\n' ) str[ln] = '\0';
+    
+    callback(str, read, total_files);
+    read++;
   }
   
   fclose(config);

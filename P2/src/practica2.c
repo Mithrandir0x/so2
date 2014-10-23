@@ -14,7 +14,7 @@
  * @param hl   A HashList pointer where to pour all the words available from a file
  * @param path A string indicating the path to the file to be parsed
  */
-void create_local_structure(HashList *hl, char *path)
+int create_local_structure(HashList *hl, char *path)
 {
     FILE *text;
     FunctionWordSizePtr saveWord;
@@ -36,12 +36,14 @@ void create_local_structure(HashList *hl, char *path)
     if ( !text )
     {
         printf("El fitxer [%s] no existeix o no es pot obrir.\n", path);
-        return;
+        return 1;
     }
 
     wu_get_words(text, saveWord, NULL);
 
     fclose(text);
+
+    return 0;
 }
 
 /**
@@ -81,11 +83,13 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
         
         data->primary_key = copy;
         
-        data->tpf = malloc(sizeof(int) * ( tree->num_files ));
+        // Allocate required memory into heap and initialize it to zero
+        data->tpf = calloc(tree->num_files, sizeof(int));
         data->tpf[file_num] = n;
+        
         data->num_files = tree->num_files;
         
-        data->total = n;
+        data->total = 1;
 
         insertNode(tree, data);
     }
@@ -141,7 +145,11 @@ int main(int argc, char **argv)
     // For each file indicated by the file specified by argument, it will parse
     // its content, searching for words, and it will store them in the global
     // structure.
-    process_file = ^(char *filePath, int file_num, int total_files){
+    process_file = ^(char *file_path, int file_num, int total_files){
+        int result;
+
+        printf("Reading file [%s] with id [%d/%d]\n", file_path, file_num + 1, total_files);
+        
         if ( !initializedTree )
         {
             initTree(&tree, total_files);
@@ -149,13 +157,23 @@ int main(int argc, char **argv)
         }
         
         hl_initialize(&hl, 10);
-        create_local_structure(&hl, filePath);
-        update_global_structure(&tree, &hl, file_num);
-        hl_print(&hl);
-        hl_free(&hl);
+        
+        result = create_local_structure(&hl, file_path);
+        if ( result == 0 )
+        {
+            update_global_structure(&tree, &hl, file_num);
+            //hl_print(&hl);
+            hl_free(&hl);
+        }
     };
     
-    cfg_get_file_list("files.cfg", 100, process_file);
+    if ( argc != 2 )
+    {
+        printf("usage: practica2 files.cfg\n");
+        exit(1);
+    }
+    
+    cfg_get_file_list(argv[1], 100, process_file);
     
     printTree(&tree);
     

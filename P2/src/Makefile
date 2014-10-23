@@ -41,14 +41,15 @@ FT_HELPERS_SOURCES = $(SRC)/word-utils.c $(SRC)/config.c
 FT_HELPERS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(FT_HELPERS_SOURCES))
 FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
 
-BUCKET_TESTS = 5 10
+BUCKET_TESTS = 5 10 50 200
+BUCKET_TESTS_FILE = 00ws110.txt
 
-all: dist tar
+all: practica2
 
 exe: practica2
 
 tests: clean practica2
-	valgrind $(VALGRIND_FLAGS) ./practica2
+	valgrind $(VALGRIND_FLAGS) ./practica2 files.cfg
 
 practica2: practica2.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
@@ -61,18 +62,18 @@ plot_tests: $(BUCKET_TESTS)
 
 $(BUCKET_TESTS): clean $(TESTS_EXE)
 	mkdir -p $(TEST)
-	echo '#!/bin/usr/gnuplot' >> $(TEST)/plot_$@.gp
+	echo '#!/usr/bin/gnuplot' >> $(TEST)/plot_$@.gp
 	echo 'reset' >> $(TEST)/plot_$@.gp
-	echo 'set terminal png' >> $(TEST)/plot_$@.gp
+	echo 'set terminal png size 1920,720' >> $(TEST)/plot_$@.gp
 	echo 'set nokey' >> $(TEST)/plot_$@.gp
 	echo 'set boxwidth 0.5' >> $(TEST)/plot_$@.gp
-	echo 'set ytics 0,1,10' >> $(TEST)/plot_$@.gp
+	# echo 'set ytics 0' >> $(TEST)/plot_$@.gp
 	echo 'set style fill solid 1.00 noborder' >> $(TEST)/plot_$@.gp
 	echo 'set style line 1 lc rgb "blue"' >> $(TEST)/plot_$@.gp
 	echo 'set xlabel "Buckets"' >> $(TEST)/plot_$@.gp
 	echo 'set ylabel "# Words"' >> $(TEST)/plot_$@.gp
 	echo 'plot "$(TEST)/data_$@.dat" using 1:3:xtic(2) with boxes ls 1' >> $(TEST)/plot_$@.gp
-	./test-hashlist-size fitxer.txt $@ > $(TEST)/data_$@.dat
+	./test-hashlist-size $(BUCKET_TESTS_FILE) $@ > $(TEST)/data_$@.dat
 	gnuplot < $(TEST)/plot_$@.gp > $(TEST)/plot_$@.png
 
 $(TESTS_EXE): $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(TESTS_OBJECTS)
@@ -105,3 +106,5 @@ dist: clean exe tests
 	cp $(FT_HELPERS_HEADERS)	$(DIST_SRC)/
 	cp Makefile					$(DIST_SRC)/
 	cp practica2.c				$(DIST_SRC)/
+	cp files.cfg				$(DIST_SRC)/
+	cp fitxer.txt				$(DIST_SRC)/
