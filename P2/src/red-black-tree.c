@@ -346,7 +346,7 @@ static void printNode(Node *current)
   }
 
   data = current->data;
-  printf("  [%s]: { total: [%d], per_file: [ ", data->primary_key, data->total);
+  printf("  [%s]: { total: [%d], total_words: [%d], per_file: [ ", data->primary_key, data->total, data->total_words);
   printIntArray(data);
   printf("] }\n");
 

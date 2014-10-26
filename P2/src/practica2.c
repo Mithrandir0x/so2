@@ -67,6 +67,7 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
     {
         k = data->tpf[file_num];
         data->tpf[file_num] += n;
+        data->total_words += n;
         data->total++;
     }
     else
@@ -90,6 +91,7 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
         data->num_files = tree->num_files;
         
         data->total = 1;
+        data->total_words = n;
 
         insertNode(tree, data);
     }
@@ -162,7 +164,7 @@ int main(int argc, char **argv)
         if ( result == 0 )
         {
             update_global_structure(&tree, &hl, file_num);
-            //hl_print(&hl);
+            hl_print(&hl);
             hl_free(&hl);
         }
     };

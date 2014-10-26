@@ -44,12 +44,16 @@ FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
 BUCKET_TESTS = 5 10 50 200
 BUCKET_TESTS_FILE = 00ws110.txt
 
+TEST_LIST = llista_prova.cfg
+
 all: practica2
 
 exe: practica2
 
 tests: clean practica2
-	valgrind $(VALGRIND_FLAGS) ./practica2 files.cfg
+	mkdir -p $(TEST)
+	./practica2 $(TEST_LIST) > $(TEST)/log.txt
+	valgrind $(VALGRIND_FLAGS) ./practica2 $(TEST_LIST) 2> $(TEST)/valgrind.txt
 
 practica2: practica2.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
@@ -106,5 +110,7 @@ dist: clean exe tests
 	cp $(FT_HELPERS_HEADERS)	$(DIST_SRC)/
 	cp Makefile					$(DIST_SRC)/
 	cp practica2.c				$(DIST_SRC)/
-	cp files.cfg				$(DIST_SRC)/
+	cp $(TEST_LIST)				$(DIST_SRC)/
 	cp fitxer.txt				$(DIST_SRC)/
+	cp fitxer2.txt				$(DIST_SRC)/
+	cp -r $(TEST)/*  			$(DIST_TST)/
