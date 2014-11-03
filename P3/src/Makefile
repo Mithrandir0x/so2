@@ -1,5 +1,5 @@
 ##
-#  Project utilities
+#  Project utilities and paths
 ##
 
 DELIVERABLE_N = P3
@@ -16,6 +16,12 @@ DIST_SRC = $(DIST_PKG)/src
 DIST_TST = $(DIST_PKG)/proves
 
 UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
+
+##
+#  Database path
+##
+
+DATABASE = ~/Dropbox/Universitat/Sistemes\ Operatius\ 2/base_dades
 
 ##
 #  Distribution thingies
@@ -42,7 +48,7 @@ VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
 ##
 
 DATA_STRUCTS = linked-list red-black-tree hash-list
-FT_HELPERS   = word-utils config
+FT_HELPERS   = word-utils config persistence
 
 ##
 #  Compilation Targets and Executable generation
@@ -61,13 +67,15 @@ FT_HELPERS_HEADERS = $(patsubst %, $(SRC)/%.h, $(FT_HELPERS))
 FT_HELPERS_OBJECTS = $(patsubst %, $(SRC)/%.o, $(FT_HELPERS))
 
 ##
-#  Test parameters
+#  Test parameters and target paths
 ##
 
 BUCKET_TESTS = 5 10 50 200
 BUCKET_TESTS_FILE = 00ws110.txt
 
 TEST_LIST = llista_prova.cfg
+
+PROD_LIST = $(DATABASE)/llista.cfg
 
 all: practica3
 
@@ -77,6 +85,9 @@ tests: clean practica3
 	mkdir -p $(TEST)
 	./practica3 $(TEST_LIST) > $(TEST)/log.txt
 	valgrind $(VALGRIND_FLAGS) ./practica3 $(TEST_LIST) 2> $(TEST)/valgrind.txt
+
+setup_database:
+	ln -s $(DATABASE) $(SRC)
 
 practica3: practica3.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
@@ -106,14 +117,6 @@ $(BUCKET_TESTS): clean $(TESTS_EXE)
 $(TESTS_EXE): $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(TESTS_OBJECTS)
 	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
-mk_tst_targets:
-	echo $(DATA_STRUCTS_SOURCES)
-	echo $(DATA_STRUCTS_HEADERS)
-	echo $(DATA_STRUCTS_OBJECTS)
-	echo $(FT_HELPERS_SOURCES)
-	echo $(FT_HELPERS_HEADERS)
-	echo $(FT_HELPERS_OBJECTS)
-
 clean:
 	rm -rf $(DIST)
 	rm -rf $(TEST)
@@ -140,3 +143,11 @@ dist: clean exe tests
 	cp fitxer.txt               $(DIST_SRC)/
 	cp fitxer2.txt              $(DIST_SRC)/
 	cp -r $(TEST)/*             $(DIST_TST)/
+
+mk_tst_targets:
+	echo $(DATA_STRUCTS_SOURCES)
+	echo $(DATA_STRUCTS_HEADERS)
+	echo $(DATA_STRUCTS_OBJECTS)
+	echo $(FT_HELPERS_SOURCES)
+	echo $(FT_HELPERS_HEADERS)
+	echo $(FT_HELPERS_OBJECTS)

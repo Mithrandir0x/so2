@@ -6,6 +6,8 @@
 
 #define HASH_SEED        131
 
+typedef void (^OnHashListIteration)(List *, int);
+
 /**
  * This structure allows to store a custom hash map structure. It stores a fixed size
  * amount of buckets of linked lists of strings.
@@ -42,5 +44,6 @@ void hl_print_stats(HashList *hl);
 /* Iterators */
 HashListIterator* hl_iterator(HashList *hl);
 List *hl_next(HashListIterator *hli);
+void hl_iterate(HashList *hl, OnHashListIteration callback);
 
 #endif

@@ -197,3 +197,22 @@ List* hl_next(HashListIterator *iter)
 
   return NULL;
 }
+
+/**
+ * A utility method to iterate a hash-list structure using blocks.
+ *
+ * @param hl       A hash-list structure
+ * @param callback A callback to be invoked when iterating the hash-list structure
+ */
+void hl_iterate(HashList *hl, OnHashListIteration callback)
+{
+  HashListIterator *iter;
+  List *l;
+
+  iter = hl_iterator(hl);
+
+  while ( ( l = hl_next(iter) ) != NULL )
+  {
+    callback(l, iter->index);
+  }
+}
