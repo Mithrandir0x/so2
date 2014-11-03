@@ -1,3 +1,7 @@
+##
+#  Project utilities
+##
+
 DELIVERABLE_N = P3
 PKG           = $(DELIVERABLE_N)_Barrera_Lopez
 
@@ -13,7 +17,15 @@ DIST_TST = $(DIST_PKG)/proves
 
 UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
+##
+#  Distribution thingies
+##
+
 TAR_OPTS      = zcvf
+
+##
+#  Compiler/Linker configuration and valgrind flags
+##
 
 CC     = clang
 CSTD   = -std=gnu99
@@ -25,21 +37,32 @@ endif
 
 VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
 
-EXEMPLES_SOURCES    = $(wildcard $(SRC)/exemple-*.c)
-EXEMPLES_OBJECTS    = $(patsubst $(SRC)/exemple-%.c, $(SRC)/exemple-%.o, $(EXEMPLES_SOURCES))
-EXEMPLES_EXE        = $(patsubst $(SRC)/exemple-%.c, $(SRC)/exemple-%, $(EXEMPLES_SOURCES))
+##
+#  Project dependencies
+##
+
+DATA_STRUCTS = linked-list red-black-tree hash-list
+FT_HELPERS   = word-utils config
+
+##
+#  Compilation Targets and Executable generation
+##
 
 TESTS_SOURCES    = $(wildcard $(SRC_TEST)/*.c)
 TESTS_OBJECTS    = $(patsubst $(SRC_TEST)/%.c, $(SRC_TEST)/%.o, $(TESTS_SOURCES))
 TESTS_EXE        = $(patsubst $(SRC_TEST)/%.c, $(SRC)/%, $(TESTS_SOURCES))
 
-DATA_STRUCTS_SOURCES = $(SRC)/linked-list.c $(SRC)/red-black-tree.c $(SRC)/hash-list.c
-DATA_STRUCTS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(DATA_STRUCTS_SOURCES))
-DATA_STRUCTS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(DATA_STRUCTS_SOURCES))
+DATA_STRUCTS_SOURCES = $(patsubst %, $(SRC)/%.c, $(DATA_STRUCTS))
+DATA_STRUCTS_HEADERS = $(patsubst %, $(SRC)/%.h, $(DATA_STRUCTS))
+DATA_STRUCTS_OBJECTS = $(patsubst %, $(SRC)/%.o, $(DATA_STRUCTS))
 
-FT_HELPERS_SOURCES = $(SRC)/word-utils.c $(SRC)/config.c
-FT_HELPERS_HEADERS = $(patsubst $(SRC)/%.c, $(SRC)/%.h, $(FT_HELPERS_SOURCES))
-FT_HELPERS_OBJECTS = $(patsubst $(SRC)/%.c, $(SRC)/%.o, $(FT_HELPERS_SOURCES))
+FT_HELPERS_SOURCES = $(patsubst %, $(SRC)/%.c, $(FT_HELPERS))
+FT_HELPERS_HEADERS = $(patsubst %, $(SRC)/%.h, $(FT_HELPERS))
+FT_HELPERS_OBJECTS = $(patsubst %, $(SRC)/%.o, $(FT_HELPERS))
+
+##
+#  Test parameters
+##
 
 BUCKET_TESTS = 5 10 50 200
 BUCKET_TESTS_FILE = 00ws110.txt
@@ -83,6 +106,14 @@ $(BUCKET_TESTS): clean $(TESTS_EXE)
 $(TESTS_EXE): $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(TESTS_OBJECTS)
 	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
+mk_tst_targets:
+	echo $(DATA_STRUCTS_SOURCES)
+	echo $(DATA_STRUCTS_HEADERS)
+	echo $(DATA_STRUCTS_OBJECTS)
+	echo $(FT_HELPERS_SOURCES)
+	echo $(FT_HELPERS_HEADERS)
+	echo $(FT_HELPERS_OBJECTS)
+
 clean:
 	rm -rf $(DIST)
 	rm -rf $(TEST)
@@ -99,13 +130,13 @@ tar:
 dist: clean exe tests
 	mkdir -p $(DIST_SRC)
 	mkdir -p $(DIST_TST)
-	cp $(DATA_STRUCTS_SOURCES)	$(DIST_SRC)/
-	cp $(DATA_STRUCTS_HEADERS)	$(DIST_SRC)/
-	cp $(FT_HELPERS_SOURCES)	$(DIST_SRC)/
-	cp $(FT_HELPERS_HEADERS)	$(DIST_SRC)/
-	cp Makefile					$(DIST_SRC)/
-	cp practica3.c				$(DIST_SRC)/
-	cp $(TEST_LIST)				$(DIST_SRC)/
-	cp fitxer.txt				$(DIST_SRC)/
-	cp fitxer2.txt				$(DIST_SRC)/
-	cp -r $(TEST)/*  			$(DIST_TST)/
+	cp $(DATA_STRUCTS_SOURCES)  $(DIST_SRC)/
+	cp $(DATA_STRUCTS_HEADERS)  $(DIST_SRC)/
+	cp $(FT_HELPERS_SOURCES)    $(DIST_SRC)/
+	cp $(FT_HELPERS_HEADERS)    $(DIST_SRC)/
+	cp Makefile                 $(DIST_SRC)/
+	cp practica3.c              $(DIST_SRC)/
+	cp $(TEST_LIST)             $(DIST_SRC)/
+	cp fitxer.txt               $(DIST_SRC)/
+	cp fitxer2.txt              $(DIST_SRC)/
+	cp -r $(TEST)/*             $(DIST_TST)/
