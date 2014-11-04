@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "hash-list.h"
 
@@ -55,6 +56,7 @@ void hl_initialize(HashList *hl, int bucket_size)
 int hl_add_word(HashList *hl, char *str, int str_len)
 {
   int h, r;
+  char *copybuffer;
   List *l;
   ListData *ld;
   
@@ -72,8 +74,11 @@ int hl_add_word(HashList *hl, char *str, int str_len)
   }
   else
   {
+    copybuffer = malloc((strlen(str) + 1 ) * sizeof(char));
+    strcpy(copybuffer, str);
+    
     ld = malloc(sizeof(ListData));
-    ld->primary_key = str;
+    ld->primary_key = copybuffer;
     ld->numTimes = 1;
     
     insertList(l, ld);

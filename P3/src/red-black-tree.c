@@ -336,7 +336,7 @@ static void printIntArray(RBData *data)
   }
 }
 
-static void printNode(Node *current)
+/* static void printNode(Node *current)
 {
   RBData *data;
 
@@ -354,12 +354,43 @@ static void printNode(Node *current)
   {
     printNode(current->right);
   }
-}
+} */
 
 /**
  * Prints the tree in DFS mode.
  */
 void printTree(RBTree *tree)
 {
-  printNode(tree->root);
+  IterationPtr printNode;
+
+  printNode = ^(RBData *data) {
+    printf("  [%s]: { total: [%d], total_words: [%d], per_file: [ ", data->primary_key, data->total, data->total_words);
+    printIntArray(data);
+    printf("] }\n");
+  };
+
+  iterateTree(tree, printNode);
+}
+
+typedef void (^ExpandNode)(Node *);
+
+void iterateTree(RBTree *tree, IterationPtr callback)
+{
+  __block ExpandNode doExpand;
+
+  doExpand = ^(Node *current) {
+    if ( current->left != NIL )
+    {
+      doExpand(current->left);
+    }
+
+    callback(current->data);
+
+    if ( current->right != NIL )
+    {
+      doExpand(current->right);
+    }
+  };
+
+  doExpand(tree->root);
 }

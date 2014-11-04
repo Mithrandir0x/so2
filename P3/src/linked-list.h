@@ -10,6 +10,8 @@
  * Lluis Garrido, 2014.
  *
  */
+#ifndef __LINKED_LIST_H__
+#define __LINKED_LIST_H__
 
 /**
  * 
@@ -77,3 +79,4 @@ void deleteFirstList(List *l);
 void deleteList(List *l);
 void dumpList(List *l);
 
+#endif

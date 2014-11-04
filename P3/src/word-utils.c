@@ -1,7 +1,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "word-utils.h"
 
@@ -27,8 +26,6 @@ int wu_get_words(FILE *stream, FunctionWordSizePtr valid_word_callback, Function
   char wrd[WU_BUFFER_LENGTH];
 
   FunctionPtr return_word = ^(char *wrd, int j, int flag_invalid_word, FunctionWordSizePtr valid_word_callback, FunctionWordSizePtr invalid_word_callback){
-    char *copybuffer;
-  
     if ( j > 0 )
     {
       if ( flag_invalid_word )
@@ -45,15 +42,7 @@ int wu_get_words(FILE *stream, FunctionWordSizePtr valid_word_callback, Function
         // marquem el byte llegit com a NUL.
         if ( j < WU_BUFFER_LENGTH ) wrd[j] = 0;
         
-        // Quan s'ha trobat una paraula vàlida, en comptes de donar el buffer
-        // on es guarda la paraula, fem una còpia de la paraula al HEAP.
-        //
-        // Queda a discreció de la persona que implementa el callback d'alliberar
-        // la memòria reservada en aquest punt.
-        copybuffer = malloc(j * sizeof(char) + ( 1 * sizeof(char) ));
-        strcpy(copybuffer, wrd);
-        
-        valid_word_callback(copybuffer, j);
+        valid_word_callback(wrd, j);
       }
     }
   };

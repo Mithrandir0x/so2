@@ -6,6 +6,8 @@
  * 
  *
  */
+#ifndef __RED_BLACK_TREE_H__
+#define __RED_BLACK_TREE_H__
 
 #define TYPE_RBTREE_PRIMARY_KEY char*
 
@@ -64,6 +66,8 @@ typedef struct RBTree_ {
   int num_files;                /* amount of files to be parsed */
 } RBTree;
 
+typedef void (^IterationPtr)(RBData *);
+
 /*
  * Function headers. Note that not all the functions of
  * red-black-tree.c have been included here.
@@ -74,3 +78,7 @@ void insertNode(RBTree *tree, RBData *data);
 RBData *findNode(RBTree *tree, TYPE_RBTREE_PRIMARY_KEY primary_key); 
 void deleteTree(RBTree *tree);
 void printTree(RBTree *tree);
+
+void iterateTree(RBTree *tree, IterationPtr callback);
+
+#endif

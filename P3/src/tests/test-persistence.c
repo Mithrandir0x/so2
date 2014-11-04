@@ -23,16 +23,8 @@ int create_local_structure(HashList *hl, char *path)
     FunctionWordSizePtr saveWord;
 
     saveWord = ^(char *str, int length) {
-        int r;
-        r = hl_add_word(hl, str, length);
+        hl_add_word(hl, str, length);
         //printf(" %s [%d]\n", str, length);
-
-        // This is required to avoid memory leaks because the string 
-        // passed by is already stored in the list, and we don't have
-        // any use for it
-        if ( r == 1 ) {
-            free(str);
-        }
     };
 
     text = fopen(path, "r");
@@ -137,8 +129,15 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
     free(iter);
 }
 
-void import_database(RBTree *tree)
+RBTree* import_database()
 {
+    // "__block" is required to notify the compiler that those variables may be
+    // value-assigned by a block instance, not just for read-only purposes.
+    __block int initializedTree = 0;
+    __block RBTree *tree;
+
+    tree = malloc(sizeof(RBTree));
+    
     ProgressPtr process_file;
     
     // For each file indicated by the file specified by argument, it will parse
@@ -152,7 +151,8 @@ void import_database(RBTree *tree)
         
         if ( !initializedTree )
         {
-            initTree(&tree, total_files);
+            initTree(tree, total_files);
+            initializedTree = 1;
         }
         
         hl_initialize(&hl, HASH_LIST_SIZE);
@@ -160,25 +160,28 @@ void import_database(RBTree *tree)
         result = create_local_structure(&hl, file_path);
         if ( result == 0 )
         {
-            update_global_structure(&tree, &hl, file_num);
-            hl_print(&hl);
+            update_global_structure(tree, &hl, file_num);
+            // hl_print(&hl);
             hl_free(&hl);
         }
     };
     
-    cfg_get_file_list(argv[1], 100, process_file);
+    cfg_get_file_list("llista_prova.cfg", 100, process_file);
+
+    return tree;
 }
 
 int main(int argc, char **argv)
 {
-    RBTree tree,
+    RBTree *tree;
 
-    initTree(&tree, total_files);
-    import_database(&tree);
+    tree = import_database();
     
-    printTree(&tree);
+    printTree(tree);
     
-    deleteTree(&tree);
+    deleteTree(tree);
+
+    free(tree);
 
     return 0;
 }

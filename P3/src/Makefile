@@ -22,6 +22,23 @@ UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
 ##
 
 DATABASE = ~/Dropbox/Universitat/Sistemes\ Operatius\ 2/base_dades
+DATABASE_PATHS = llista.cfg \
+	etext00 \
+	etext01 \
+	etext02 \
+	etext03 \
+	etext04 \
+	etext05 \
+	etext90 \
+	etext91 \
+	etext92 \
+	etext93 \
+	etext94 \
+	etext95 \
+	etext96 \
+	etext97 \
+	etext98 \
+	etext99
 
 ##
 #  Distribution thingies
@@ -86,14 +103,15 @@ tests: clean practica3
 	./practica3 $(TEST_LIST) > $(TEST)/log.txt
 	valgrind $(VALGRIND_FLAGS) ./practica3 $(TEST_LIST) 2> $(TEST)/valgrind.txt
 
-setup_database:
-	ln -s $(DATABASE) $(SRC)
+setup_database: $(DATABASE_PATHS)
+	ln -s $(DATABASE)/$@ $(SRC)/$@
 
 practica3: practica3.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
 unit_tests: clean $(TESTS_EXE)
-	valgrind $(VALGRIND_FLAGS) ./test-hashlist-size fitxer.txt 10
+	# valgrind $(VALGRIND_FLAGS) ./test-hashlist-size fitxer.txt 10
+	valgrind $(VALGRIND_FLAGS) ./test-persistence
 
 plot_tests: $(BUCKET_TESTS)
 	echo 'Plotted tests at $(TEST)'
