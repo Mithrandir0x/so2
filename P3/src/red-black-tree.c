@@ -89,6 +89,7 @@ void initTree(RBTree *tree, int num_files)
 {
   tree->root = NIL;
   tree->num_files = num_files;
+  tree->num_words = 0;
 }
 
 /**
@@ -269,6 +270,8 @@ void insertNode(RBTree *tree, RBData *data) {
   }
 
   insertFixup(tree, x);
+
+  tree->num_words++;
 }
 
 /**
@@ -323,7 +326,7 @@ void deleteTree(RBTree *tree)
     deleteTreeRecursive(tree->root);
 }
 
-static void printIntArray(RBData *data)
+/* static void printIntArray(RBData *data)
 {
   int i, n;
   int *tpf;
@@ -334,7 +337,7 @@ static void printIntArray(RBData *data)
   {
     printf("%d ", tpf[i]);
   }
-}
+} */
 
 /* static void printNode(Node *current)
 {
@@ -364,12 +367,16 @@ void printTree(RBTree *tree)
   IterationPtr printNode;
 
   printNode = ^(RBData *data) {
-    printf("  [%s]: { total: [%d], total_words: [%d], per_file: [ ", data->primary_key, data->total, data->total_words);
-    printIntArray(data);
-    printf("] }\n");
+    //printf("  [%s]: { total: [%d], total_words: [%d], per_file: [ ", data->primary_key, data->total, data->total_words);
+    //printIntArray(data);
+    //printf("] }\n");
+
+    printf("  [%s]: { total: [%d], total_words: [%d] }\n", data->primary_key, data->total, data->total_words);
   };
 
+  printf("{ num_words: [%d], num_files: [%d]\n", tree->num_words, tree->num_files);
   iterateTree(tree, printNode);
+  printf("}\n");
 }
 
 typedef void (^ExpandNode)(Node *);

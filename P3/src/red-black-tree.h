@@ -31,7 +31,7 @@ typedef struct RBData_
   // within the structure.
   int *tpf;   // Times Per File. How many times a word has appeared in a file?
   int total;  // Number of files. How many files does the word appear in?
-  int num_files; // Number of files. Utility variable to iterate "tpf".
+  //int num_files; // Number of files. Utility variable to iterate "tpf".
   int total_words; // Total amount of times that a word appears for all files being parsed.
 } RBData;
 
@@ -64,8 +64,12 @@ typedef struct Node_ {
 typedef struct RBTree_ {
   Node *root;                   /* root of Red-Black tree */
   int num_files;                /* amount of files to be parsed */
+  int num_words;                /* amount of words stored in the tree */
 } RBTree;
 
+/**
+ * 
+ */
 typedef void (^IterationPtr)(RBData *);
 
 /*

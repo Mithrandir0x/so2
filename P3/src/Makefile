@@ -22,23 +22,23 @@ UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
 ##
 
 DATABASE = ~/Dropbox/Universitat/Sistemes\ Operatius\ 2/base_dades
-DATABASE_PATHS = llista.cfg \
-	etext00 \
-	etext01 \
-	etext02 \
-	etext03 \
-	etext04 \
-	etext05 \
-	etext90 \
-	etext91 \
-	etext92 \
-	etext93 \
-	etext94 \
-	etext95 \
-	etext96 \
-	etext97 \
-	etext98 \
-	etext99
+DATABASE_PATHS = $(DATABASE)/llista.cfg \
+	$(DATABASE)/etext00 \
+	$(DATABASE)/etext01 \
+	$(DATABASE)/etext02 \
+	$(DATABASE)/etext03 \
+	$(DATABASE)/etext04 \
+	$(DATABASE)/etext05 \
+	$(DATABASE)/etext90 \
+	$(DATABASE)/etext91 \
+	$(DATABASE)/etext92 \
+	$(DATABASE)/etext93 \
+	$(DATABASE)/etext94 \
+	$(DATABASE)/etext95 \
+	$(DATABASE)/etext96 \
+	$(DATABASE)/etext97 \
+	$(DATABASE)/etext98 \
+	$(DATABASE)/etext99 \
 
 ##
 #  Distribution thingies
@@ -104,14 +104,31 @@ tests: clean practica3
 	valgrind $(VALGRIND_FLAGS) ./practica3 $(TEST_LIST) 2> $(TEST)/valgrind.txt
 
 setup_database: $(DATABASE_PATHS)
-	ln -s $(DATABASE)/$@ $(SRC)/$@
+	ln -s $(DATABASE)/llista.cfg $(SRC)/llista.cfg
+	ln -s $(DATABASE)/etext00 $(SRC)/etext00
+	ln -s $(DATABASE)/etext01 $(SRC)/etext01
+	ln -s $(DATABASE)/etext02 $(SRC)/etext02
+	ln -s $(DATABASE)/etext03 $(SRC)/etext03
+	ln -s $(DATABASE)/etext04 $(SRC)/etext04
+	ln -s $(DATABASE)/etext05 $(SRC)/etext05
+	ln -s $(DATABASE)/etext90 $(SRC)/etext90
+	ln -s $(DATABASE)/etext91 $(SRC)/etext91
+	ln -s $(DATABASE)/etext92 $(SRC)/etext92
+	ln -s $(DATABASE)/etext93 $(SRC)/etext93
+	ln -s $(DATABASE)/etext94 $(SRC)/etext94
+	ln -s $(DATABASE)/etext95 $(SRC)/etext95
+	ln -s $(DATABASE)/etext96 $(SRC)/etext96
+	ln -s $(DATABASE)/etext97 $(SRC)/etext97
+	ln -s $(DATABASE)/etext98 $(SRC)/etext98
+	ln -s $(DATABASE)/etext99 $(SRC)/etext99
 
 practica3: practica3.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
-unit_tests: clean $(TESTS_EXE)
+unit_tests: $(TESTS_EXE)
 	# valgrind $(VALGRIND_FLAGS) ./test-hashlist-size fitxer.txt 10
-	valgrind $(VALGRIND_FLAGS) ./test-persistence
+	# valgrind $(VALGRIND_FLAGS) ./test-persistence
+	# ./test-persistence
 
 plot_tests: $(BUCKET_TESTS)
 	echo 'Plotted tests at $(TEST)'
@@ -136,6 +153,7 @@ $(TESTS_EXE): $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(TESTS_OBJECTS)
 	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)
 
 clean:
+	rm -f llista.cfg etext00 etext01 etext02 etext03 etext04 etext05 etext90 etext91 etext92 etext93 etext94 etext95 etext96 etext97 etext98 etext99
 	rm -rf $(DIST)
 	rm -rf $(TEST)
 	rm -rf *.o

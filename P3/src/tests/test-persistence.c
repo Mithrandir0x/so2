@@ -8,7 +8,7 @@
 #include "../red-black-tree.h"
 #include "../word-utils.h"
 
-#define HASH_LIST_SIZE 1000
+#define HASH_LIST_SIZE 10000
 
 /**
  * Given a path to a text file, this function parses this file's words and stores them
@@ -83,7 +83,7 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
         data->tpf = calloc(tree->num_files, sizeof(int));
         data->tpf[file_num] = n;
         
-        data->num_files = tree->num_files;
+        // data->num_files = tree->num_files;
         
         data->total = 1;
         data->total_words = n;
@@ -166,7 +166,7 @@ RBTree* import_database()
         }
     };
     
-    cfg_get_file_list("llista_prova.cfg", 100, process_file);
+    cfg_get_file_list("llista.cfg", 100, process_file);
 
     return tree;
 }
@@ -174,14 +174,29 @@ RBTree* import_database()
 int main(int argc, char **argv)
 {
     RBTree *tree;
+    RBTree *copy;
 
+    printf("Importing database...\n");
+    copy = malloc(sizeof(RBTree));
     tree = import_database();
     
-    printTree(tree);
-    
-    deleteTree(tree);
+    if ( tree->num_files > 0 )
+    {
+        printf("Saving file...\n");
+        prs_save(tree, "llista_prova.rbt");
+
+        printf("Loading file...\n");
+        prs_load(copy, "llista_prova.rbt");
+
+        // printTree(tree);
+        // printTree(copy);
+
+        deleteTree(tree);
+        deleteTree(copy);
+    }
 
     free(tree);
+    free(copy);
 
     return 0;
 }

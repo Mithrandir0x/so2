@@ -4,7 +4,13 @@
 
 #include "red-black-tree.h"
 
-int prs_save_global_structure(RBTree *tree, char *path);
-RBTree* prs_load_global_structure(char *path);
+/**
+ * 
+ */
+#define PRS_FILE_NOT_FOUND 1
+#define PRS_BAD_FORMAT     2
+
+int prs_save(RBTree *tree, char *path);
+int prs_load(RBTree *tree, char *path);
 
 #endif
