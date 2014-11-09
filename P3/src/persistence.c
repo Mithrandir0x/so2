@@ -11,10 +11,11 @@ static int magic_number_b = 0x534C4F5F;
 static int stop_number    = 0x50544F53;
 
 /**
- * Save a Red-Black Tree structure in the path passed by parameter.
+ * Save a Red-Black Tree structure to a file.
  *
  * @param tree Pointer to the Red-Black Tree structure that saves all the word counts for each file
- * @param path 
+ * @param path Path to the file where it will be stored the tree
+ * @returns Either PRS_FILE_NOT_FOUND if the file cannot be created or 0 to indicate that all has gone well
  */
 int prs_save(RBTree *tree, char *path)
 {
@@ -77,6 +78,14 @@ int prs_save(RBTree *tree, char *path)
   return 0;
 }
 
+/**
+ * Load a Red-Black Tree structure from a file.
+ *
+ * @param tree Pointer to the Red-Black Tree structure where it will be stored all the words from a file
+ * @param path Path to the file from where it will be loaded the tree
+ * @returns Either PRS_FILE_NOT_FOUND if the file cannot be created, or PRS_BAD_FORMAT if the file
+ *    does not have a valid format, or 0 to indicate that all has gone well
+ */
 int prs_load(RBTree *tree, char *path)
 {
   FILE *file;
