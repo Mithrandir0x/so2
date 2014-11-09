@@ -191,6 +191,9 @@ int main(int argc, char **argv)
         // printTree(tree);
         // printTree(copy);
 
+        printf("tree->num_words: [%d]\n", tree->num_words);
+        printf("copy->num_words: [%d]\n", copy->num_words);
+
         deleteTree(tree);
         deleteTree(copy);
     }

@@ -64,7 +64,7 @@ VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
 #  Project dependencies
 ##
 
-DATA_STRUCTS = linked-list red-black-tree hash-list
+DATA_STRUCTS = linked-list red-black-tree hash-list stats
 FT_HELPERS   = word-utils config persistence
 
 ##
