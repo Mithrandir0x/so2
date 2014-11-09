@@ -374,7 +374,7 @@ void printTree(RBTree *tree)
     printf("  [%s]: { total: [%d], total_words: [%d] }\n", data->primary_key, data->total, data->total_words);
   };
 
-  printf("{ num_words: [%d], num_files: [%d]\n", tree->num_words, tree->num_files);
+  printf("{\n  num_words: [%d], num_files: [%d]\n", tree->num_words, tree->num_files);
   iterateTree(tree, printNode);
   printf("}\n");
 }

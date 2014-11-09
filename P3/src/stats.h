@@ -16,9 +16,11 @@ typedef struct {
 } DictionaryStatistics;
 
 void st_initialize(DictionaryStatistics *stats);
+void st_free(DictionaryStatistics *stats);
+
+void st_printf(DictionaryStatistics *stats);
 
 void st_extract_statistics(RBTree *tree, DictionaryStatistics *stats);
-
-void st_dump_statistics(DictionaryStatistics *stats);
+void st_dump_statistics(DictionaryStatistics *stats, char *path);
 
 #endif

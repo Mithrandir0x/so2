@@ -55,7 +55,7 @@ int prs_save(RBTree *tree, char *path)
   
   if ( file == 0 )
   {
-    printf("El fitxer [%s] no existeix o no es pot obrir.\n", path);
+    printf("The file [%s] does not exists or cannot be open\n", path);
     return PRS_FILE_NOT_FOUND;
   }
 

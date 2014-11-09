@@ -6,6 +6,7 @@
 #include "../hash-list.h"
 #include "../persistence.h"
 #include "../red-black-tree.h"
+#include "../stats.h"
 #include "../word-utils.h"
 
 #define HASH_LIST_SIZE 10000
@@ -174,32 +175,30 @@ RBTree* import_database()
 int main(int argc, char **argv)
 {
     RBTree *tree;
-    RBTree *copy;
+    DictionaryStatistics *stats;
 
     printf("Importing database...\n");
-    copy = malloc(sizeof(RBTree));
     tree = import_database();
+
+    printf("Initializing statistics...\n");
+    stats = malloc(sizeof(DictionaryStatistics));
+    st_initialize(stats);
     
     if ( tree->num_files > 0 )
     {
-        printf("Saving file...\n");
-        prs_save(tree, "llista_prova.rbt");
+        st_extract_statistics(tree, stats);
 
-        printf("Loading file...\n");
-        prs_load(copy, "llista_prova.rbt");
+        printTree(tree);
+        st_printf(stats);
 
-        // printTree(tree);
-        // printTree(copy);
-
-        printf("tree->num_words: [%d]\n", tree->num_words);
-        printf("copy->num_words: [%d]\n", copy->num_words);
+        st_dump_statistics(stats, "stats.png");
 
         deleteTree(tree);
-        deleteTree(copy);
+        st_free(stats);
     }
 
     free(tree);
-    free(copy);
+    free(stats);
 
     return 0;
 }
