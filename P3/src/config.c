@@ -4,14 +4,31 @@
 
 #include "config.h"
 
+void cfg_init(FilePathList *cnt)
+{
+  cnt->size = 0;
+  cnt->files = NULL;
+}
+
+void cfg_free(FilePathList *cnt)
+{
+  int i;
+  
+  for ( i = 0 ; i < cnt->size ; i++ )
+  {
+    free(cnt->files[i]);
+  }
+  free(cnt->files);
+}
+
 void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
 {
   FILE *config;
   char str[buffer_size];
   char *r;
   int total_files = 0;
-  int read = 0;
-  size_t ln;
+  int read = 0; 
+  int ln;
   
   
   config = fopen(config_path, "r");
@@ -39,6 +56,52 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
     callback(str, read, total_files);
     read++;
   }
-  
+
   fclose(config);
+}
+
+void cfg_import_config(char *config_path, FilePathList *cnt)
+{
+  FILE *config;
+  char str[200];
+  char *r;
+  int i = 0;
+  int ln;
+  
+  config = fopen(config_path, "r");
+  
+  if (config == 0)
+  {
+    printf("El fitxer [%s] no existeix o no es pot obrir.\n", config_path);
+    exit(1);
+  }
+  
+  r = fgets(str, 200, config);
+  if (r == NULL)
+  {  
+    printf("El fitxer [%s] esta buit.\n", config_path);
+    exit(1);
+  }
+  cnt->size = atoi(str);
+  
+  cnt->files = malloc(sizeof(char *) * cnt->size);
+  while ( fgets(str, 200, config) != NULL )
+  {
+    // Do not include newline character when returning the string with the file path
+    ln = strlen(str) - 1;
+    if ( str[ln] == '\n' ) str[ln] = '\0';
+    
+    cnt->files[i] = malloc(sizeof(char) * ( ln + 1 ));
+    strcpy(cnt->files[i], str);
+  }
+}
+
+void cfg_iterate(FilePathList *cnt, ProgressPtr callback)
+{
+  int i = 0;
+  
+  for ( i = 0 ; i < cnt->size ; i++ )
+  {
+    callback(cnt->files[i], i, cnt->size);
+  }
 }

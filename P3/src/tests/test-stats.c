@@ -134,11 +134,8 @@ RBTree* import_database()
 {
     // "__block" is required to notify the compiler that those variables may be
     // value-assigned by a block instance, not just for read-only purposes.
-    __block int initializedTree = 0;
     __block RBTree *tree;
-
-    tree = malloc(sizeof(RBTree));
-    
+    FilePathList *list;
     ProgressPtr process_file;
     
     // For each file indicated by the file specified by argument, it will parse
@@ -149,12 +146,6 @@ RBTree* import_database()
         int result;
 
         printf("Reading file [%s] with id [%d/%d]\n", file_path, file_num + 1, total_files);
-        
-        if ( !initializedTree )
-        {
-            initTree(tree, total_files);
-            initializedTree = 1;
-        }
         
         hl_initialize(&hl, HASH_LIST_SIZE);
         
@@ -167,7 +158,18 @@ RBTree* import_database()
         }
     };
     
-    cfg_get_file_list("llista_prova.cfg", 100, process_file);
+    list = malloc(sizeof(FilePathList));
+    tree = malloc(sizeof(RBTree));
+    
+    cfg_init(list);
+    cfg_import_config("llista_prova.cfg", list);
+    
+    initTree(tree, list->size);
+    
+    cfg_iterate(list, process_file);
+    
+    cfg_free(list);
+    free(list);
 
     return tree;
 }
