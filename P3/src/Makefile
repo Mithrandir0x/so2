@@ -159,6 +159,7 @@ clean:
 	rm -rf *.o
 	rm -rf *.dat
 	rm -rf *.png
+	rm -rf *.rbt
 	rm -f $(EXEMPLES_EXE)
 	rm -rf $(SRC_TEST)/*.o
 	rm -f $(TESTS_EXE)

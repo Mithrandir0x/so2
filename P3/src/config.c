@@ -51,6 +51,7 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
   {
     // Do not include newline character when returning the string with the file path
     ln = strlen(str) - 1;
+
     if ( str[ln] == '\n' ) str[ln] = '\0';
     
     callback(str, read, total_files);
@@ -66,7 +67,7 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
   char str[200];
   char *r;
   int i = 0;
-  int ln;
+  int l;
   
   config = fopen(config_path, "r");
   
@@ -88,12 +89,18 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
   while ( fgets(str, 200, config) != NULL )
   {
     // Do not include newline character when returning the string with the file path
-    ln = strlen(str) - 1;
-    if ( str[ln] == '\n' ) str[ln] = '\0';
+    l = strlen(str);
+    if ( str[l - 1] == '\n' ) str[l - 1] = '\0';
+
+    //printf("%d %s %d\n", i, str, l);
     
-    cnt->files[i] = malloc(sizeof(char) * ( ln + 1 ));
+    cnt->files[i] = malloc(sizeof(char) * ( l + 1 ));
     strcpy(cnt->files[i], str);
+
+    i++;
   }
+
+  fclose(config);
 }
 
 void cfg_iterate(FilePathList *cnt, ProgressPtr callback)
