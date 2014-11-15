@@ -12,6 +12,23 @@
 #define HASH_LIST_SIZE 10000
 
 /**
+ * Utility function required to clear the STDIN buffer. This is necessary because
+ * sometimes we read a char from the STDIN, and it may happen that an ENTER and a
+ * '\n' character are already there.
+ *
+ * Clearing programmatically the STDIN allows us to avoid reading from STDIN and
+ * finding those characters there...
+ *
+ * This function may be called after a getc, scanf or anything that reads from
+ * the STDIN.
+ */
+void flush()
+{
+  char c;
+  while ((c = getchar()) != '\n' && c != EOF);
+}
+
+/**
  * Given a path to a text file, this function parses this file's words and stores them
  * inside the HashList given by reference.
  *
@@ -138,6 +155,7 @@ RBTree *import_database()
   RBTree *tree;
   
   tree = malloc(sizeof(RBTree));
+  list = malloc(sizeof(FilePathList));
   
   // For each file indicated by the file specified by argument, it will parse
   // its content, searching for words, and it will store them in the global
@@ -157,14 +175,22 @@ RBTree *import_database()
           hl_free(&hl);
       }
   };
+  
+  cfg_init(list);
 
   printf("Nom del fitxer de configuració: ");
   scanf("%s", path);
+  flush();
   
-  list = malloc(sizeof(FilePathList));
-  
-  cfg_init(list);
   cfg_import_config(path, list);
+
+  if ( list->size == 0 )
+  {
+    cfg_free(list);
+    free(list);
+    free(tree);
+    return NULL;
+  }
 
   initTree(tree, list->size);
   cfg_iterate(list, process_file);
@@ -178,30 +204,43 @@ RBTree *import_database()
 void save_database(RBTree *tree)
 {
   char path[80];
+  
+  if ( tree == NULL ) {
+    printf("No es pot salvar un arbre buit.\n");
+    return;
+  }
 
-  printf("Ruta a on guardar l'arbre: \n");
+  printf("Ruta a on guardar l'arbre: ");
   scanf("%s", path);
+  flush();
 
   prs_save(tree, path);
 }
 
-void load_database(RBTree *tree)
+int load_database(RBTree *tree)
 {
   char path[80];
 
   printf("Ruta de la base de dades a carregar: ");
   scanf("%s", path);
+  flush();
 
-  prs_load(tree, path);
+  return prs_load(tree, path);
 }
 
 void generate_statistics(RBTree *tree)
 {
   DictionaryStatistics stats;
   char path[80];
+  
+  if ( tree == NULL ) {
+    printf("No es pot generar les estadístiques d'un arbre buit.\n");
+    return;
+  }
 
-  printf("Nom de la imatge amb l'histograma:");
+  printf("Nom de la imatge amb l'histograma: ");
   scanf("%s", path);
+  flush();
 
   st_initialize(&stats);
   st_extract_statistics(tree, &stats);
@@ -235,6 +274,7 @@ void clean_up(RBTree *tree)
 int main(int argc, char **argv)
 {
   char option;
+  int op;
   RBTree *tree = NULL;
 
   while ( 1 )
@@ -242,7 +282,10 @@ int main(int argc, char **argv)
     show_menu(tree);
 
     printf("Indiqui la opcio: ");
-    option = getc(stdin);
+    scanf("%c", &option);
+    flush();
+    
+    printf("option: [%c]\n", option);
 
     switch ( option )
     {
@@ -255,7 +298,12 @@ int main(int argc, char **argv)
         break;
       case '3':
         clean_up(tree);
-        load_database(tree);
+        tree = malloc(sizeof(RBTree));
+        op = load_database(tree);
+        if ( op == PRS_FILE_NOT_FOUND ) {
+          free(tree);
+          tree = NULL;
+        }
         break;
       case '4':
         generate_statistics(tree);

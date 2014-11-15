@@ -98,10 +98,10 @@ all: practica3
 
 exe: practica3
 
-tests: clean practica3
-	mkdir -p $(TEST)
-	./practica3 $(TEST_LIST) > $(TEST)/log.txt
-	valgrind $(VALGRIND_FLAGS) ./practica3 $(TEST_LIST) 2> $(TEST)/valgrind.txt
+# tests: clean practica3
+# 	mkdir -p $(TEST)
+# 	./practica3 $(TEST_LIST) > $(TEST)/log.txt
+# 	valgrind $(VALGRIND_FLAGS) ./practica3
 
 setup_database: $(DATABASE_PATHS)
 	ln -s $(DATABASE)/llista.cfg $(SRC)/llista.cfg
@@ -121,6 +121,9 @@ setup_database: $(DATABASE_PATHS)
 	ln -s $(DATABASE)/etext97 $(SRC)/etext97
 	ln -s $(DATABASE)/etext98 $(SRC)/etext98
 	ln -s $(DATABASE)/etext99 $(SRC)/etext99
+
+valgrind: practica3
+	valgrind $(VALGRIND_FLAGS) ./practica3
 
 practica3: practica3.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)

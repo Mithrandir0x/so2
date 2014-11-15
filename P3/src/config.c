@@ -30,7 +30,6 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
   int read = 0; 
   int ln;
   
-  
   config = fopen(config_path, "r");
   
   if (config == 0)
@@ -74,14 +73,14 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
   if (config == 0)
   {
     printf("El fitxer [%s] no existeix o no es pot obrir.\n", config_path);
-    exit(1);
+    return;
   }
   
   r = fgets(str, 200, config);
   if (r == NULL)
   {  
     printf("El fitxer [%s] esta buit.\n", config_path);
-    exit(1);
+    return;
   }
   cnt->size = atoi(str);
   
