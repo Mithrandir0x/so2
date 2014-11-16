@@ -125,7 +125,7 @@ void st_dump_statistics(DictionaryStatistics *stats, char *path)
     printf("%s", cmd);
     fputs(cmd, gnuplot);
   }
-  fputs("plot \"stats_dump.dat\" with boxes ls 1\n", gnuplot);
+  fputs("plot \"stats_dump.dat\" using 1:2:xtic(1) with boxes ls 1\n", gnuplot);
 
   if ( pclose(gnuplot) == 1 )
   {

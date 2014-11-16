@@ -173,7 +173,6 @@ tar:
 
 dist: clean exe tests
 	mkdir -p $(DIST_SRC)
-	mkdir -p $(DIST_TST)
 	cp $(DATA_STRUCTS_SOURCES)  $(DIST_SRC)/
 	cp $(DATA_STRUCTS_HEADERS)  $(DIST_SRC)/
 	cp $(FT_HELPERS_SOURCES)    $(DIST_SRC)/
@@ -183,7 +182,6 @@ dist: clean exe tests
 	cp $(TEST_LIST)             $(DIST_SRC)/
 	cp fitxer.txt               $(DIST_SRC)/
 	cp fitxer2.txt              $(DIST_SRC)/
-	cp -r $(TEST)/*             $(DIST_TST)/
 
 mk_tst_targets:
 	echo $(DATA_STRUCTS_SOURCES)
