@@ -53,7 +53,7 @@ TAR_OPTS      = zcvf
 CC     = clang
 CSTD   = -std=gnu99
 CFLAGS = -Wall -Werror -g -pedantic $(CSTD) -fblocks
-LFLAGS = -lm -lBlocksRuntime
+LFLAGS = -lm -lBlocksRuntime -lpthread
 ifeq ($(UNAME),Darwin)
 LFLAGS = -lm
 endif
@@ -132,6 +132,7 @@ unit_tests: $(TESTS_EXE)
 	# valgrind $(VALGRIND_FLAGS) ./test-hashlist-size fitxer.txt 10
 	# valgrind $(VALGRIND_FLAGS) ./test-persistence
 	# ./test-persistence
+	# valgrind $(VALGRIND_FLAGS) ./test-mt-config llista.cfg 4
 
 $(TESTS_EXE): $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(TESTS_OBJECTS)
 	$(CC) -o $@ $(SRC_TEST)/$@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)

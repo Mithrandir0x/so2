@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,8 @@
 #include "word-utils.h"
 
 #define HASH_LIST_SIZE 10000
+
+static pthread_mutex_t tree_manipulation_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * Utility function required to clear the STDIN buffer. This is necessary because
@@ -74,40 +77,42 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
     char *copy;
     RBData *data;
 
+    pthread_mutex_lock(&tree_manipulation_mutex);
     data = findNode(tree, word);
 
     if ( data != NULL )
     {
-        k = data->tpf[file_num];
-        data->tpf[file_num] += n;
-        data->total_words += n;
-        data->total++;
+      k = data->tpf[file_num];
+      data->tpf[file_num] += n;
+      data->total_words += n;
+      data->total++;
     }
     else
     {
-        data = malloc(sizeof(RBData));
-        
-        // We don't want to reference the string passed by, so we copy the string
-        // so when the tree must be freed, it will not try to free a string referenced
-        // in another place.
-        //
-        // Each piece of data in its own place should be managed by its owner.
-        copy = malloc(sizeof(char) * ( strlen(word) + 1 ));
-        strcpy(copy, word);
-        
-        data->primary_key = copy;
-        
-        // Allocate required memory into heap and initialize it to zero
-        data->tpf = calloc(tree->num_files, sizeof(int));
-        data->tpf[file_num] = n;
-        
-        // data->num_files = tree->num_files;
-        
-        data->total = 1;
-        data->total_words = n;
+      data = malloc(sizeof(RBData));
+      
+      // We don't want to reference the string passed by, so we copy the string
+      // so when the tree must be freed, it will not try to free a string referenced
+      // in another place.
+      //
+      // Each piece of data in its own place should be managed by its owner.
+      copy = malloc(sizeof(char) * ( strlen(word) + 1 ));
+      strcpy(copy, word);
+      
+      data->primary_key = copy;
+      
+      // Allocate required memory into heap and initialize it to zero
+      data->tpf = calloc(tree->num_files, sizeof(int));
+      data->tpf[file_num] = n;
+      
+      // data->num_files = tree->num_files;
+      
+      data->total = 1;
+      data->total_words = n;
 
-        insertNode(tree, data);
+      insertNode(tree, data);
     }
+      pthread_mutex_unlock(&tree_manipulation_mutex);
 }
 
 /**
@@ -145,6 +150,29 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
     }
 
     free(iter);
+}
+
+void parse_file_list(FilePathList *list, RBTree *tree)
+{
+  ProgressPtr process_file;
+
+  process_file = ^(char *file_path, int file_num, int total_files){
+      HashList hl;
+      int result;
+
+      printf("Reading file [%s] with id [%d/%d]\n", file_path, file_num + 1, total_files);
+      
+      hl_initialize(&hl, HASH_LIST_SIZE);
+      
+      result = create_local_structure(&hl, file_path);
+      if ( result == 0 )
+      {
+          update_global_structure(tree, &hl, file_num);
+          hl_free(&hl);
+      }
+  };
+  
+  cfg_iterate(list, process_file);
 }
 
 RBTree *import_database()
@@ -193,7 +221,7 @@ RBTree *import_database()
   }
 
   initTree(tree, list->size);
-  cfg_iterate(list, process_file);
+  cfg_mt_iterate(list, process_file, 128);
   
   cfg_free(list);
   free(list);
