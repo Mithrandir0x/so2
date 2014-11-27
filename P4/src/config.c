@@ -1,10 +1,40 @@
-#include <time.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #include "config.h"
+
+void printFilePathItem(FilePathItem *item)
+{
+  //printf("{ id: [%d] size: [%d] path: [%s] }\n", item->id, item->size, item->path);
+  printf("{ [%p] ", item);
+
+  printf("size: [%d] ", item->size);
+  printf("id: [%d] ", item->id);
+  printf("path: [%s] ", item->path);
+
+  printf("}\n");
+}
+
+void cfg_print(FilePathList *list)
+{
+  int i;
+  FilePathItem *item;
+
+  printf("{ [%p]\n", list);
+  
+  for ( i = 0 ; i < list->size ; i++ )
+  {
+    item = &(list->files[i]);
+
+    printFilePathItem(item);
+  }
+
+  printf("}\n");
+}
 
 void cfg_init(FilePathList *cnt)
 {
@@ -15,12 +45,16 @@ void cfg_init(FilePathList *cnt)
 void cfg_free(FilePathList *cnt)
 {
   int i;
+  FilePathItem *item;
   
   for ( i = 0 ; i < cnt->size ; i++ )
   {
-    free(cnt->files[i]);
+    item = &(cnt->files[i]);
+
+    free(item->path);
   }
   free(cnt->files);
+  free(cnt);
 }
 
 void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
@@ -65,6 +99,8 @@ void cfg_get_file_list(char *config_path, int buffer_size, ProgressPtr callback)
 void cfg_import_config(char *config_path, FilePathList *cnt)
 {
   FILE *config;
+  FilePathItem *item;
+  struct stat st;
   char str[200];
   char *r;
   int i = 0;
@@ -84,19 +120,32 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
     printf("El fitxer [%s] esta buit.\n", config_path);
     return;
   }
-  cnt->size = atoi(str);
   
-  cnt->files = malloc(sizeof(char *) * cnt->size);
+  cnt->size = atoi(str);
+  printf("malloc_127\n");
+  cnt->files = malloc(sizeof(FilePathItem) * cnt->size);
+  
   while ( fgets(str, 200, config) != NULL )
   {
     // Do not include newline character when returning the string with the file path
     l = strlen(str);
     if ( str[l - 1] == '\n' ) str[l - 1] = '\0';
 
+    item = &(cnt->files[i]);
+
     //printf("%d %s %d\n", i, str, l);
+
+    item->id = i;
+
+    stat(str, &st);
+    item->size = st.st_size;
+    //item->size = 0;
     
-    cnt->files[i] = malloc(sizeof(char) * ( l + 1 ));
-    strcpy(cnt->files[i], str);
+    printf("malloc_146\n");
+    item->path = malloc(sizeof(char) * ( l + 1 ));
+    strcpy(item->path, str);
+
+    printFilePathItem(item);
 
     i++;
   }
@@ -110,7 +159,7 @@ void cfg_iterate(FilePathList *cnt, ProgressPtr callback)
   
   for ( i = 0 ; i < cnt->size ; i++ )
   {
-    callback(cnt->files[i], i, cnt->size);
+    callback(cnt->files[i].path, cnt->files[i].id, cnt->size);
   }
 }
 
@@ -185,8 +234,8 @@ static FilePathIteratorItem *cfg_mt_iterator_next(FilePathListIterator *iter, Fi
 
   if ( i < size )
   {
-    item->id = i;
-    item->path = list->files[i];
+    item->id = list->files[i].id;
+    item->path = list->files[i].path;
     iter->index++;
   }
 
@@ -251,11 +300,18 @@ static void *th_call_progress_callback(void *arg)
  */
 void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads)
 {
-  int i;  
+  int i;
   pthread_t tids[n_threads];
   FilePathListIterator *iter;
   FileProcessorParameters *params;
   FileProcessorStatistics **stats;
+  
+  double time_taken;
+  struct timespec start, end;
+  pthread_t tid;
+  
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  tid = pthread_self();
 
   iter = cfg_iterator(list);
   params = malloc(sizeof(FileProcessorParameters));
@@ -284,4 +340,56 @@ void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads)
   }
 
   free(stats);
+
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  time_taken = end.tv_sec - start.tv_sec;
+  time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
+  printf("Main Thread ID: [%10u] Parsed files: [%3d] Time taken: [%lf] s\n",
+    tid,
+    list->size,
+    time_taken);
+}
+
+/**
+ * SCHEDULED MULTI-THREADED SUPPORT FOR ITERATING THE STRUCTURE
+
+ max file size per batch
+ max threads
+ initial load
+ drecreasing load
+ total size
+ */
+
+typedef FilePathList* (^FilePathScheduler)(FilePathList *list);
+
+void th_sch(void *arg)
+{
+  FilePathList *list;
+  FilePathScheduler *scheduler;
+
+  struct timespec start, end;
+  FileProcessorStatistics *stats;
+  pthread_t tid;
+  
+  tid = pthread_self();
+  stats = malloc(sizeof(FileProcessorStatistics));
+  
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
+  cfg_iterate(scheduler(list), callback);
+
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+  stats->thread_id = (unsigned int) tid;
+  stats->parsed_files = list->size;
+  stats->time_taken = end.tv_sec - start.tv_sec;
+  stats->time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+  return((void *) stats);
+}
+
+void cfg_sch_mt_iterate(FilePathList *list, ProgressPtr callback, FilePathScheduler iter)
+{
+  int i;
+  pthread_t tids[n_threads];
 }

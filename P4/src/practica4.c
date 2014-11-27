@@ -182,7 +182,9 @@ RBTree *import_database()
   char path[80];
   RBTree *tree;
   
+  printf("malloc_185\n");
   tree = malloc(sizeof(RBTree));
+  printf("malloc_187\n");
   list = malloc(sizeof(FilePathList));
   
   // For each file indicated by the file specified by argument, it will parse
@@ -211,6 +213,7 @@ RBTree *import_database()
   flush();
   
   cfg_import_config(path, list);
+  cfg_print(list);
 
   if ( list->size == 0 )
   {
@@ -224,7 +227,7 @@ RBTree *import_database()
   cfg_mt_iterate(list, process_file, 128);
   
   cfg_free(list);
-  free(list);
+  printf("free_187\n");
 
   return tree;
 }
