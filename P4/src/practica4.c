@@ -1,3 +1,4 @@
+#include <math.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,8 @@
 #include "word-utils.h"
 
 #define HASH_LIST_SIZE 10000
+
+#define __ENABLE_SCHEDULED_DB_IMPORT
 
 static pthread_mutex_t tree_manipulation_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -152,29 +155,7 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
     free(iter);
 }
 
-void parse_file_list(FilePathList *list, RBTree *tree)
-{
-  ProgressPtr process_file;
-
-  process_file = ^(char *file_path, int file_num, int total_files){
-      HashList hl;
-      int result;
-
-      printf("Reading file [%s] with id [%d/%d]\n", file_path, file_num + 1, total_files);
-      
-      hl_initialize(&hl, HASH_LIST_SIZE);
-      
-      result = create_local_structure(&hl, file_path);
-      if ( result == 0 )
-      {
-          update_global_structure(tree, &hl, file_num);
-          hl_free(&hl);
-      }
-  };
-  
-  cfg_iterate(list, process_file);
-}
-
+#ifndef __ENABLE_SCHEDULED_DB_IMPORT
 RBTree *import_database()
 {
   ProgressPtr process_file;
@@ -182,43 +163,42 @@ RBTree *import_database()
   char path[80];
   RBTree *tree;
   
-  printf("malloc_185\n");
   tree = malloc(sizeof(RBTree));
-  printf("malloc_187\n");
   list = malloc(sizeof(FilePathList));
   
   // For each file indicated by the file specified by argument, it will parse
   // its content, searching for words, and it will store them in the global
   // structure.
-  process_file = ^(char *file_path, int file_num, int total_files){
+  process_file = ^(FilePathItem *item, int total_files){
       HashList hl;
       int result;
 
-      printf("Reading file [%s] with id [%d/%d]\n", file_path, file_num + 1, total_files);
+      printf("Reading file [%s] with id [%d/%d]\n", item->path, item->id + 1, total_files);
       
       hl_initialize(&hl, HASH_LIST_SIZE);
       
-      result = create_local_structure(&hl, file_path);
+      result = create_local_structure(&hl, item->path);
       if ( result == 0 )
       {
-          update_global_structure(tree, &hl, file_num);
+          update_global_structure(tree, &hl, item->id);
           hl_free(&hl);
       }
   };
   
   cfg_init(list);
 
+  printf("Mode multifil\n");
+
   printf("Nom del fitxer de configuració: ");
   scanf("%s", path);
   flush();
   
   cfg_import_config(path, list);
-  cfg_print(list);
+  //cfg_print(list);
 
   if ( list->size == 0 )
   {
     cfg_free(list);
-    free(list);
     free(tree);
     return NULL;
   }
@@ -230,6 +210,86 @@ RBTree *import_database()
 
   return tree;
 }
+#endif
+
+#ifdef __ENABLE_SCHEDULED_DB_IMPORT
+RBTree *import_database()
+{
+  ProgressPtr process_file;
+  FilePathScheduler scheduler;
+  FilePathList *list;
+  char path[80];
+  RBTree *tree;
+  
+  tree = malloc(sizeof(RBTree));
+  list = malloc(sizeof(FilePathList));
+  
+  // For each file indicated by the file specified by argument, it will parse
+  // its content, searching for words, and it will store them in the global
+  // structure.
+  process_file = ^(FilePathItem *item, int total_files){
+      HashList hl;
+      int result;
+
+      printf("Reading file [%s] with id [%d]\n", item->path, item->id + 1);
+      
+      hl_initialize(&hl, HASH_LIST_SIZE);
+      
+      result = create_local_structure(&hl, item->path);
+      if ( result == 0 )
+      {
+          update_global_structure(tree, &hl, item->id);
+          hl_free(&hl);
+      }
+  };
+
+  scheduler = ^(FilePathList *list, FilePathList **tasks, int n_threads){
+    int i;
+
+    int total_files_per_thread = ceil(list->size / n_threads) + 1;
+
+    printf("Total files per thread [%d]\n", total_files_per_thread);
+
+    ProgressPtr add_file_to_list = ^(FilePathItem *item, int total_files){
+      int j = item->id % n_threads;
+      //printf("Task [%d] File [%3d/%3d]\n", j + 1, item->id, total_files);
+      cfg_insert_file_path(tasks[j], item->id, item->size, item->path);
+    };
+
+    for ( i = 0 ; i < n_threads ; i++ )
+    {
+      cfg_init_pr(tasks[i], total_files_per_thread);
+    }
+
+    cfg_iterate(list, add_file_to_list);
+  };
+  
+  cfg_init(list);
+
+  printf("Mode multifil amb planificació\n");
+
+  printf("Nom del fitxer de configuració: ");
+  scanf("%s", path);
+  flush();
+  
+  cfg_import_config(path, list);
+  //cfg_print(list);
+
+  if ( list->size == 0 )
+  {
+    cfg_free(list);
+    free(tree);
+    return NULL;
+  }
+
+  initTree(tree, list->size);
+  cfg_sch_mt_iterate(list, process_file, scheduler, 32);
+  
+  cfg_free(list);
+
+  return tree;
+}
+#endif
 
 void save_database(RBTree *tree)
 {
