@@ -224,10 +224,9 @@ RBTree *import_database()
   }
 
   initTree(tree, list->size);
-  cfg_mt_iterate(list, process_file, 128);
+  cfg_mt_iterate(list, process_file, 32);
   
   cfg_free(list);
-  printf("free_187\n");
 
   return tree;
 }

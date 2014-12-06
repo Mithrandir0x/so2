@@ -122,7 +122,6 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
   }
   
   cnt->size = atoi(str);
-  printf("malloc_127\n");
   cnt->files = malloc(sizeof(FilePathItem) * cnt->size);
   
   while ( fgets(str, 200, config) != NULL )
@@ -141,7 +140,6 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
     item->size = st.st_size;
     //item->size = 0;
     
-    printf("malloc_146\n");
     item->path = malloc(sizeof(char) * ( l + 1 ));
     strcpy(item->path, str);
 
@@ -220,26 +218,28 @@ static FilePathListIterator *cfg_iterator(FilePathList *list)
  */
 static FilePathIteratorItem *cfg_mt_iterator_next(FilePathListIterator *iter, FilePathIteratorItem *item)
 {
-  int i, size;
-  FilePathList *list;
-
   pthread_mutex_lock(&mt_iterator_next_mutex);
-
-  item->id = -1;
-  item->path = NULL;
-
-  list = iter->list;
-  i = iter->index;
-  size = list->size;
-
-  if ( i < size )
+  
+  item->id = iter->index;
+  if ( iter->index < iter->list->size )
   {
-    item->id = list->files[i].id;
-    item->path = list->files[i].path;
     iter->index++;
+  }
+  else
+  {
+    item->id = -1;
   }
 
   pthread_mutex_unlock(&mt_iterator_next_mutex);
+  
+  if ( item->id != -1 )
+  {
+    item->path = iter->list->files[item->id].path;
+  }
+  else
+  {
+    item->path = NULL;
+  }
 
   return item;
 }
@@ -345,7 +345,7 @@ void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads)
   time_taken = end.tv_sec - start.tv_sec;
   time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
   printf("Main Thread ID: [%10u] Parsed files: [%3d] Time taken: [%lf] s\n",
-    tid,
+    (unsigned int) tid,
     list->size,
     time_taken);
 }
@@ -360,6 +360,7 @@ void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads)
  total size
  */
 
+/*
 typedef FilePathList* (^FilePathScheduler)(FilePathList *list);
 
 void th_sch(void *arg)
@@ -393,3 +394,4 @@ void cfg_sch_mt_iterate(FilePathList *list, ProgressPtr callback, FilePathSchedu
   int i;
   pthread_t tids[n_threads];
 }
+*/
