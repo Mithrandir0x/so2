@@ -184,7 +184,7 @@ RBTree *import_database()
   
   cfg_init(list);
 
-  printf("Mode multifil\n");
+  printf("Mode multifil productor-consumidor\n");
 
   printf("Nom del fitxer de configuració: ");
   scanf("%s", path);

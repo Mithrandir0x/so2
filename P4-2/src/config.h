@@ -1,6 +1,8 @@
 #ifndef __CONFIG__
 #define __CONFIG__
 
+#include "hash-list.h"
+
 typedef struct {
     int id;
     int size;
@@ -20,6 +22,9 @@ typedef struct {
 } FilePathListIterator;
 
 typedef void (^ProgressPtr)(FilePathItem *, int);
+
+typedef HashList* (^FileProducerPtr)(FilePathItem *, int);
+typedef void (^FileConsumerPtr)(HashList *);
 
 /**
  * Block function header to allow arbitrary partitions of a list of files to be parsed.
@@ -41,7 +46,6 @@ void cfg_import_config(char *config_path, FilePathList *cnt);
 void cfg_iterate(FilePathList *cnt, ProgressPtr callback);
 
 void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads);
-void cfg_sch_mt_iterate(FilePathList *list, ProgressPtr callback, FilePathScheduler scheduler, int n_threads);
 
 #endif
 
