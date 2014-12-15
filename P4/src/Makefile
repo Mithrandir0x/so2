@@ -59,6 +59,7 @@ LFLAGS = -lm
 endif
 
 VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes -v
+HELGRIND_FLAGS = --tool=helgrind -v
 
 ##
 #  Project dependencies
@@ -124,6 +125,9 @@ setup_database: $(DATABASE_PATHS)
 
 valgrind: practica4
 	valgrind $(VALGRIND_FLAGS) ./practica4
+
+helgrind: practica4
+	valgrind $(HELGRIND_FLAGS) ./practica4
 
 practica4: practica4.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS)
 	$(CC) -o $@ $@.o $(DATA_STRUCTS_OBJECTS) $(FT_HELPERS_OBJECTS) $(LFLAGS)

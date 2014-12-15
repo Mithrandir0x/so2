@@ -21,9 +21,7 @@ typedef struct {
     FilePathList *list;
 } FilePathListIterator;
 
-typedef void (^ProgressPtr)(FilePathItem *, int);
-
-typedef HashList* (^FileProducerPtr)(FilePathItem *, int);
+typedef HashList* (^FileProducerPtr)(FilePathItem *);
 typedef void (^FileConsumerPtr)(HashList *);
 
 /**
@@ -43,9 +41,7 @@ void cfg_insert_file_path(FilePathList *cnt, int id, int size, char *path);
 
 void cfg_import_config(char *config_path, FilePathList *cnt);
 
-void cfg_iterate(FilePathList *cnt, ProgressPtr callback);
-
-void cfg_mt_iterate(FilePathList *list, ProgressPtr callback, int n_threads);
+void cfg_mt_iterate(FilePathList *list, FileProducerPtr producerCb, FileConsumerPtr consumerCb, int n_threads, int circular_buffer_size);
 
 #endif
 

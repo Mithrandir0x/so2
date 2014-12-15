@@ -17,6 +17,7 @@ typedef void (^OnHashListIteration)(List *, int);
  * the strings stored inside the linked list.
  */
 typedef struct hash_list_t {
+  int   id;
   int   size;
   List *buckets;
 } HashList;

@@ -37,6 +37,7 @@ void hl_initialize(HashList *hl, int bucket_size)
   
   hl->size = bucket_size;
   hl->buckets = malloc(sizeof(List) * bucket_size);
+  hl->id = -1;
 
   for ( i = 0 ; i < bucket_size ; i++ )
   {

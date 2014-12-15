@@ -142,51 +142,47 @@ void cfg_import_config(char *config_path, FilePathList *cnt)
   fclose(config);
 }
 
-void cfg_iterate(FilePathList *cnt, ProgressPtr callback)
-{
-  int i = 0;
-  
-  for ( i = 0 ; i < cnt->size ; i++ )
-  {
-    if ( cnt->files[i].path != NULL ) callback(cnt->files + i, cnt->size);
-  }
-}
-
 /**
  * MULTI-THREADING SUPPORT FOR ITERATING THE STRUCTURE
  */
 
 static pthread_mutex_t mt_iterator_next_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mt_prod_cons_muter = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mt_prod_cons_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_cond_t mt_cond_prod;
-static pthread_cond_t mt_cond_cons;
+static pthread_cond_t mt_cond_prod = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t mt_cond_cons = PTHREAD_COND_INITIALIZER;
 
 static HashList **buffer;
 static int w = 0;
 static int r = 0;
 static int counter = 0;
+static int k = 0;
 
 typedef struct {
   FilePathListIterator *iter;
   FileProducerPtr callback;
+  int circular_buffer_size;
 } FileProcessorParameters;
 
 typedef struct {
+  FilePathListIterator *iter;
   FileConsumerPtr callback;
+  int circular_buffer_size;
 } FileConsumerParameters;
 
 typedef struct {
   unsigned int thread_id;
   int parsed_files;
+  int consumed_files;
   double time_taken;
 } FileProcessorStatistics;
 
 static void print_file_processor_statistics(FileProcessorStatistics *stats)
 {
-  printf("Thread ID: [%10u] Parsed files: [%3d] Time taken: [%lf] s\n",
+  printf("Thread ID [%10u] Parsed files [%3d] Consumed Files [%d] Time taken [%lf] s\n",
     stats->thread_id,
     stats->parsed_files,
+    stats->consumed_files,
     stats->time_taken
   );
 }
@@ -203,7 +199,7 @@ static FilePathListIterator *cfg_iterator(FilePathList *list)
 
   iter = malloc(sizeof(FilePathListIterator));
 
-  iter->index = 0;
+  iter->index = -1;
   iter->list = list;
 
   return iter;
@@ -235,6 +231,7 @@ static FilePathItem *cfg_mt_iterator_next(FilePathListIterator *iter)
   {
     iter->index++;
     item = iter->list->files + iter->index;
+    //printf("Producer Thread [%d] item { id [%d] path [%s] }\n", (unsigned int) pthread_self(), item->id, item->path);
   }
 
   pthread_mutex_unlock(&mt_iterator_next_mutex);
@@ -243,65 +240,125 @@ static FilePathItem *cfg_mt_iterator_next(FilePathListIterator *iter)
 }
 
 /**
- * Thread implementation used by cfg_mt_iterate function.
- *
- * Each instanced thread will request a new file to be parsed. The fastest thread
- * will get most of the files.
+ * Producer thread
  */
 static void *th_producer(void *arg)
 {
   FileProcessorParameters *params = (FileProcessorParameters *) arg;
   
   pthread_t tid;
+  HashList *list;
   
   int parsed_files = 0;
+  int M = params->circular_buffer_size;
   
   struct timespec start, end;
   FileProcessorStatistics *stats;
   
+  FileProducerPtr callback = params->callback;
   FilePathListIterator *iter = params->iter;
   FilePathItem *item;
-  ProgressPtr callback = params->callback;
-  FilePathList *list = iter->list;
+  
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  
+  tid = pthread_self();
+  stats = malloc(sizeof(FileProcessorStatistics));
+  
+  stats->thread_id = (unsigned int) tid;
+  
+  while ( ( item = cfg_mt_iterator_next(iter) ) != NULL )
+  {
+    pthread_mutex_lock(&mt_prod_cons_mutex);
+
+    while ( counter == M ) pthread_cond_wait(&mt_cond_prod, &mt_prod_cons_mutex);
+
+    //printf("Producer Thread [%d] Producing list [%s]\n", stats->thread_id, item->path);
+    
+    list = callback(item);
+    
+    buffer[w] = list;
+    w = ( w + 1 ) % M;
+    counter++;
+    
+    parsed_files++;
+
+    pthread_cond_signal(&mt_cond_cons);
+    
+    pthread_mutex_unlock(&mt_prod_cons_mutex);
+  }
+
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+  stats->parsed_files = parsed_files;
+  stats->consumed_files = 0;
+  stats->time_taken = end.tv_sec - start.tv_sec;
+  stats->time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+  //printf("Producer Thread [%d] Ending...\n", stats->thread_id);
+
+  return((void *) stats);
+}
+
+/**
+ * Consumer thread
+ */
+static void *th_consumer(void *arg)
+{
+  FileConsumerParameters *params = (FileConsumerParameters *) arg;
+
+  int M = params->circular_buffer_size;
+
+  int consumed_files = 0;
+
+  pthread_t tid;
+  HashList *list;
+
+  FilePathListIterator *iter = params->iter;
+  FileConsumerPtr callback = params->callback;
+  
+  struct timespec start, end;
+  FileProcessorStatistics *stats;
   
   clock_gettime(CLOCK_MONOTONIC, &start);
   
   tid = pthread_self();
   stats = malloc(sizeof(FileProcessorStatistics));
 
-  while ( ( item = cfg_mt_iterator_next(iter) ) != NULL )
+  stats->thread_id = (unsigned int) tid;
+
+  int N = iter->list->size;
+
+  // To ensure that all consumer threads do process hashlists, it is
+  // required each consumer thread knows how many files have been
+  while ( k < N )
   {
-    callback(item, list->size);
-    parsed_files++;
+    pthread_mutex_lock(&mt_prod_cons_mutex);
+
+    while ( counter == 0 ) pthread_cond_wait(&mt_cond_cons, &mt_prod_cons_mutex);
+
+    list = buffer[r];
+
+    //printf("Consuming HashList [%d]\n", list->id);
+    
+    callback(list);
+    r = ( r + 1 ) % M;
+    k++;
+    consumed_files++;
+    counter--;
+
+    pthread_cond_signal(&mt_cond_prod);
+
+    pthread_mutex_unlock(&mt_prod_cons_mutex);
   }
 
   clock_gettime(CLOCK_MONOTONIC, &end);
-
-  stats->thread_id = (unsigned int) tid;
-  stats->parsed_files = parsed_files;
+  
+  stats->parsed_files = 0;
+  stats->consumed_files = consumed_files;
   stats->time_taken = end.tv_sec - start.tv_sec;
   stats->time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-  return((void *) stats);
-}
-
-static void *th_consumer(void *arg)
-{
-  FileConsumerParameters *params = (FileConsumerParameters *) arg;
-  
-  struct timespec start, end;
-  FileProcessorStatistics *stats;
-  
-  clock_gettime(CLOCK_MONOTONIC, &start);
-  
-  // Critical Section
-
-  clock_gettime(CLOCK_MONOTONIC, &end);
-
-  stats->thread_id = (unsigned int) tid;
-  stats->parsed_files = parsed_files;
-  stats->time_taken = end.tv_sec - start.tv_sec;
-  stats->time_taken += ( end.tv_nsec - start.tv_nsec) / 1000000000.0;
+  //printf("Consumer Thread [%d] Ending...\n", stats->thread_id);
   
   return((void *) stats);
 }
@@ -318,12 +375,20 @@ static void *th_consumer(void *arg)
  * @param n_threads            Number of threads to spawn that will carry all the file processing
  * @param circular_buffer_size The size of the circular buffer
  */
-void cfg_mt_iterate(FilePathList *list, FileProducerPtr producerCb, FileConsumerPtr consumerCb, int n_threads, int circular_buffer_size)
+void cfg_mt_iterate(FilePathList *list,
+  FileProducerPtr producerCb, FileConsumerPtr consumerCb,
+  int n_threads,
+  int circular_buffer_size)
 {
-  int i;
+  int i = 0;
   
   pthread_t tid;
   pthread_t tids[n_threads + 1];
+
+  w = 0;
+  r = 0;
+  counter = 0;
+  k = 0;
   
   double time_taken;
   struct timespec start, end;
@@ -339,13 +404,16 @@ void cfg_mt_iterate(FilePathList *list, FileProducerPtr producerCb, FileConsumer
   tid = pthread_self();
   iter = cfg_iterator(list);
   producerParams = malloc(sizeof(FileProcessorParameters));
+  consumerParams = malloc(sizeof(FileConsumerParameters));
   stats = malloc(sizeof(FileProcessorStatistics) * n_threads);
 
   producerParams->iter = iter;
   producerParams->callback = producerCb;
+  producerParams->circular_buffer_size = circular_buffer_size;
   
   consumerParams->iter = iter;
   consumerParams->callback = consumerCb;
+  consumerParams->circular_buffer_size = circular_buffer_size;
 
   pthread_create(tids + i, NULL, th_consumer, (void *) consumerParams);
   for ( i = 1 ; i < n_threads + 1 ; i++ )
@@ -359,9 +427,10 @@ void cfg_mt_iterate(FilePathList *list, FileProducerPtr producerCb, FileConsumer
   }
 
   free(iter);
-  free(params);
+  free(producerParams);
+  free(consumerParams);
 
-  for ( i = 0 ; i < n_threads ; i++ )
+  for ( i = 0 ; i < n_threads + 1 ; i++ )
   {
     print_file_processor_statistics(stats[i]);
     free(stats[i]);

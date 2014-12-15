@@ -124,7 +124,7 @@ void update_global_tree_node(RBTree *tree, int file_num, char *word, int n)
  * @param hl        Pointer to the HashList that stores all the words from a file
  * @param files_num An index of the file being parsed
  */
-void update_global_structure(RBTree *tree, HashList *hl, int file_num)
+void update_global_structure(RBTree *tree, HashList *hl)
 {
     int n;
     char *word;
@@ -144,7 +144,7 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
             word = data->primary_key;
             n = data->numTimes;
 
-            update_global_tree_node(tree, file_num, word, n);
+            update_global_tree_node(tree, hl->id, word, n);
 
             item = item->next;
         }
@@ -155,7 +155,8 @@ void update_global_structure(RBTree *tree, HashList *hl, int file_num)
 
 RBTree *import_database()
 {
-  ProgressPtr process_file;
+  FileProducerPtr process_file;
+  FileConsumerPtr add_to_tree;
   FilePathList *list;
   char path[80];
   RBTree *tree;
@@ -166,20 +167,36 @@ RBTree *import_database()
   // For each file indicated by the file specified by argument, it will parse
   // its content, searching for words, and it will store them in the global
   // structure.
-  process_file = ^(FilePathItem *item, int total_files){
-      HashList hl;
+  process_file = ^(FilePathItem *item){
+      HashList *hl;
       int result;
 
-      printf("Reading file [%s] with id [%d/%d]\n", item->path, item->id + 1, total_files);
+      hl = malloc(sizeof(HashList));
+
+      printf("Reading file [%s] with id [%d/%d]\n", item->path, item->id + 1, list->size);
       
-      hl_initialize(&hl, HASH_LIST_SIZE);
+      hl_initialize(hl, HASH_LIST_SIZE);
       
-      result = create_local_structure(&hl, item->path);
-      if ( result == 0 )
+      result = create_local_structure(hl, item->path);
+      if ( result != 0 )
       {
-          update_global_structure(tree, &hl, item->id);
-          hl_free(&hl);
+        hl_free(hl);
+        free(hl);
+
+        hl = NULL;
       }
+      else
+      {
+        hl->id = item->id;
+      }
+
+      return hl;
+  };
+
+  add_to_tree = ^(HashList *hl){
+    update_global_structure(tree, hl);
+    hl_free(hl);
+    free(hl);
   };
   
   cfg_init(list);
@@ -188,10 +205,11 @@ RBTree *import_database()
 
   printf("Nom del fitxer de configuració: ");
   scanf("%s", path);
-  flush();
-  
+  flush();  
   cfg_import_config(path, list);
   //cfg_print(list);
+
+  printf("Files to process [%d]\n", list->size);
 
   if ( list->size == 0 )
   {
@@ -201,7 +219,7 @@ RBTree *import_database()
   }
 
   initTree(tree, list->size);
-  cfg_mt_iterate(list, process_file, 32);
+  cfg_mt_iterate(list, process_file, add_to_tree, 32, 10);
   
   cfg_free(list);
 
